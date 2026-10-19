@@ -159,7 +159,7 @@ const catalog = {
   watches: watches.map(({ imageSource, ...watch }) => watch), brands
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
-for (const file of ['app.js', 'styles.css', 'logo.jpg', 'hero-watch.png', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
+for (const file of ['app.js', 'styles.css', 'logo.jpg', 'hero-watch.png', 'collection-banner.png', 'marble-background.png', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
 const assetVersion = createHash('sha256')
   .update(readFileSync(join(root, 'src', 'app.js')))
   .update(readFileSync(join(root, 'src', 'styles.css')))

@@ -1015,3 +1015,126 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .catalog-content .watch-grid, .home-featured .watch-grid { grid-template-columns: 1fr; }
   .catalog-content .card-photo, .home-featured .watch-card:first-child .card-photo { height: 280px; }
 }
+
+/* Layered showroom backgrounds */
+.hero { background-color: #080706; }
+.hero::after { content: ''; position: absolute; inset: auto 0 0; height: 85px; background: linear-gradient(transparent, #0d0b09); pointer-events: none; }
+.hero-layout { z-index: 2; }
+.collection-banner {
+  min-height: 210px;
+  background-image: url('/collection-banner.png');
+  background-position: center 48%;
+}
+.collection-banner::before { background: linear-gradient(90deg, #05040480, #0504043d 28%, #05040475 52%, #0504043d 72%, #05040480); }
+.collection-banner .wrap { padding-block: 42px; }
+.collection-banner h1 { text-shadow: 0 4px 22px #000b; }
+.home-brands {
+  position: relative;
+  isolation: isolate;
+  border-top: 1px solid #bd9c6350;
+  background: linear-gradient(90deg, #090807bb, #090807dc 52%, #090807b8), url('/marble-background.png') center top / cover no-repeat, #0d0c0a;
+}
+.home-brands::after { content: ''; position: absolute; z-index: -1; inset: auto 0 0; height: 180px; background: linear-gradient(transparent, #110d0a); pointer-events: none; }
+.home-brands .section-head h2, .home-featured .section-head h2 { text-shadow: 0 5px 22px #0008; }
+.brand-feature {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: #c6a26766;
+  background: linear-gradient(145deg, #241c14dd, #100e0ce8 65%), #15110e;
+  box-shadow: inset 0 1px #f2d49b17, 0 16px 38px #0003;
+  transition: background var(--normal), border-color var(--normal), box-shadow var(--normal), transform var(--normal);
+}
+.brand-feature::before, .brand-tile::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -67px;
+  top: 9px;
+  width: 188px;
+  height: 188px;
+  border: 1px solid #e5c78825;
+  border-radius: 50%;
+  box-shadow: 0 0 0 18px #d8af6310, 0 0 0 19px #d8af6323, inset 0 0 0 17px #d8af630b;
+  pointer-events: none;
+}
+.brand-feature:hover { border-color: #d4af70aa; background: linear-gradient(145deg, #302316ed, #17120de8 65%); box-shadow: inset 0 1px #f2d49b2a, 0 22px 50px #0008; }
+.brand-feature strong { position: relative; max-width: 90%; }
+.home-featured {
+  position: relative;
+  background: radial-gradient(ellipse at 80% 3%, #4b321b34, transparent 48%), linear-gradient(180deg, #110d0a, #0b0a09 54%, #15100b);
+}
+.home-featured::before { content: ''; position: absolute; inset: 0 0 auto; height: 1px; background: linear-gradient(90deg, transparent, #e0bb7a57, transparent); }
+.home-featured .watch-card { box-shadow: 0 16px 38px #0003; }
+.home-featured .watch-card:hover, .catalog-content .watch-card:hover { box-shadow: 0 23px 50px #0009, 0 0 0 1px #d4af704d; }
+.home-featured .collection-tile { grid-column: 1 / -1; min-height: 205px; flex-direction: row; align-items: center; gap: 34px; padding: 32px 42px; background: linear-gradient(90deg, #2b1b10e8, #110d0acd 70%), url('/marble-background.png') center / cover no-repeat, #15100b; }
+.collection-tile { position: relative; overflow: hidden; }
+.collection-tile > span { flex: 0 0 17%; }
+.collection-tile strong { flex: 1; }
+.collection-tile small { flex: 0 0 25%; justify-content: flex-end; gap: 12px; text-align: right; }
+.collection-tile::before { content: '✧'; position: absolute; top: 22%; right: 22px; color: #d4af7048; font: 72px/1 var(--serif); pointer-events: none; }
+.catalog-section { background: radial-gradient(ellipse at 85% 0, #3d291624, transparent 45%), #0a0908; }
+.filter-panel, .filter-panel.open { background: linear-gradient(155deg, #1b1713, #0e0d0b 60%); box-shadow: inset 0 1px #d4af701c; }
+.watch-card { background: linear-gradient(165deg, #1b1713, #100f0d 58%); }
+.card-body { border-top: 1px solid #bd9c6336; }
+.visit-section {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(90deg, #100c09e8, #19110bef 48%, #0d0a08d0), url('/marble-background.png') center center / cover no-repeat, #120d09;
+}
+.visit-section::before { content: ''; position: absolute; z-index: -1; inset: 0; background: radial-gradient(circle at 32% 48%, #9a67331f, transparent 44%); }
+.visit-card {
+  position: relative;
+  overflow: hidden;
+  border-color: #d4af7082;
+  background: linear-gradient(150deg, #372618c9, #100d0aca 55%, #1b140ebd);
+  box-shadow: 0 24px 70px #0008, inset 0 1px #f5db9f30;
+}
+.visit-card::before { content: ''; position: absolute; inset: 11px; border: 1px solid #d4af702f; border-radius: 12px; pointer-events: none; }
+.page-intro { background: linear-gradient(90deg, #0c0b09e8, #15100bd4 55%, #0c0b09db), url('/marble-background.png') center / cover no-repeat, #0d0b09; }
+.brands-page, .favorites-page, .contact-page { background: radial-gradient(ellipse at 85% 0, #5a391925, transparent 38%), #0c0a09; }
+.brand-tile { position: relative; isolation: isolate; overflow: hidden; border-color: #d4af7040; background: linear-gradient(145deg, #211911, #110f0c 70%); }
+.brand-tile::before { right: -81px; top: -34px; opacity: .7; }
+.brand-tile:hover { border-color: #d4af70a6; background: linear-gradient(145deg, #302216, #18120d 70%); box-shadow: 0 20px 45px #0006; }
+.contact-lead { position: relative; isolation: isolate; overflow: hidden; padding: clamp(30px, 5vw, 70px); border: 1px solid #d4af705c; border-radius: 24px; background: linear-gradient(90deg, #15100dd9, #1b120cdd 55%, #0c0a09aa), url('/marble-background.png') center / cover no-repeat, #120d0a; box-shadow: 0 24px 60px #0005; }
+.contact-lead::before { content: ''; position: absolute; z-index: -1; inset: 0; background: radial-gradient(circle at 78% 40%, #8e5c2929, transparent 35%); pointer-events: none; }
+.contact-lead > img { box-shadow: 0 15px 45px #0008; }
+.contact-methods > a { border-color: #d4af704d; background: linear-gradient(135deg, #241a11, #110f0d 68%); }
+.contact-methods > a:hover { border-color: #d4af70a8; background: linear-gradient(135deg, #352417, #1b140e 68%); }
+.contact-visit { background: linear-gradient(90deg, #150f0bdb, #1e140ddd), url('/marble-background.png') center / cover no-repeat, #120d09; }
+.detail-main { background: radial-gradient(ellipse at 90% 0, #6b431b21, transparent 35%), #0c0b09; }
+.site-footer { background: linear-gradient(90deg, #090807e8, #0c0a08df), url('/marble-background.png') center / cover no-repeat, #090807; }
+:root[data-theme="light"] .home-brands { background: radial-gradient(ellipse at 10% 20%, #d9c4a187, transparent 50%), linear-gradient(#faf6ee, #efe7da); }
+:root[data-theme="light"] .home-brands::after { background: linear-gradient(transparent, #f0e8dc); }
+:root[data-theme="light"] .brand-feature { border-color: #a37e4e67; background: linear-gradient(145deg, #fffdfa, #f2e9db); box-shadow: 0 14px 34px #5b3f1a17; }
+:root[data-theme="light"] .brand-feature:hover { background: #eee0ca; }
+:root[data-theme="light"] .home-featured { background: radial-gradient(ellipse at 80% 0, #d9c2a294, transparent 55%), linear-gradient(#efe7dd, #f9f4ec); }
+:root[data-theme="light"] .collection-tile { background: radial-gradient(circle at 85% 15%, #d5b887c2, transparent 45%), linear-gradient(145deg, #f8f0e2, #eee2d0); }
+:root[data-theme="light"] .home-featured .collection-tile { background: radial-gradient(ellipse at 80% 20%, #d7ba8bba, transparent 55%), linear-gradient(110deg, #f8f0e3, #e8d8bf); }
+:root[data-theme="light"] .catalog-section { background: radial-gradient(ellipse at 85% 0, #d4b78a36, transparent 45%), #f8f5ef; }
+:root[data-theme="light"] .filter-panel { background: linear-gradient(160deg, #fffdfa, #f6eee3); }
+:root[data-theme="light"] .watch-card { background: linear-gradient(#fffdfa, #f9f4ed); }
+:root[data-theme="light"] .visit-section { background: radial-gradient(ellipse at 70% 10%, #ddc7a7, transparent 50%), linear-gradient(#f7f1e8, #eee3d2); }
+:root[data-theme="light"] .visit-card { background: linear-gradient(145deg, #fffdf9, #eadbc5); box-shadow: 0 22px 55px #63431b28; }
+:root[data-theme="light"] .page-intro { background: radial-gradient(ellipse at 80% 0, #ddc8a8, transparent 55%), #f5eee4; }
+:root[data-theme="light"] .brands-page, :root[data-theme="light"] .favorites-page, :root[data-theme="light"] .contact-page { background: radial-gradient(ellipse at 85% 0, #e7d1ae72, transparent 40%), #fffdfa; }
+:root[data-theme="light"] .brand-tile { background: linear-gradient(145deg, #fffdfa, #f4ebdf); }
+:root[data-theme="light"] .brand-tile:hover { background: #efe1cb; }
+:root[data-theme="light"] .contact-methods > a { background: linear-gradient(135deg, #fffdfa, #f4e8d7); }
+:root[data-theme="light"] .contact-lead { background: radial-gradient(ellipse at 75% 40%, #e2c9a68f, transparent 55%), linear-gradient(#fffdfa, #f4e9d9); box-shadow: 0 20px 45px #62441b20; }
+:root[data-theme="light"] .contact-methods > a:hover { background: #eddfc9; }
+:root[data-theme="light"] .contact-visit { background: linear-gradient(120deg, #f3e9dc, #e8d9c4); }
+:root[data-theme="light"] .detail-main { background: radial-gradient(ellipse at 90% 0, #ddc39b3d, transparent 40%), #f8f5ef; }
+:root[data-theme="light"] .site-footer { background: linear-gradient(120deg, #f2e9dc, #e8dac6); }
+@media (max-width: 760px) {
+  .collection-banner { min-height: 170px; background-position: center; }
+  .home-brands, .visit-section, .contact-visit { background-size: auto, cover; }
+  .brand-feature::before { right: -95px; opacity: .55; }
+  .home-featured .collection-tile { min-height: 220px; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 15px; padding: 25px; }
+  .collection-tile > span, .collection-tile strong, .collection-tile small { flex: none; }
+  .collection-tile small { justify-content: flex-start; text-align: left; }
+  .contact-lead { padding: 34px 26px; }
+}
+@media (max-width: 360px) {
+  .home-featured .collection-tile { grid-column: auto; }
+}
