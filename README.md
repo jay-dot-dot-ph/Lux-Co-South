@@ -24,4 +24,6 @@ The Firebase project is `lux-co-south`; `firebase.json` deploys `dist/`. After b
 firebase deploy --only hosting --project lux-co-south
 ```
 
+The black and gold design uses the original logo in `src/logo.jpg` and a unified design system in `src/styles.css`. The build copies both to `dist/`. Committing and pushing source changes through GitHub Desktop updates the repository; Firebase Hosting still needs a separate deploy command because automatic GitHub deployment is not configured.
+
 Product URLs use `/watch/{Watch ID}/` and inquiries include the Watch ID, displayed price, and product link. Contact links currently point to Graceful Gifts Manila as requested. The GitHub repository contains the source and Firebase configuration; generated `dist/` assets are rebuilt from the Sheet before release.

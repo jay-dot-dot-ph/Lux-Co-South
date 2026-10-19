@@ -115,7 +115,7 @@ const catalog = {
   watches: watches.map(({ imageSource, ...watch }) => watch), brands
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
-for (const file of ['app.js', 'styles.css', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
+for (const file of ['app.js', 'styles.css', 'logo.jpg', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
 const template = readFileSync(join(root, 'src', 'index.html'), 'utf8');
 const page = (path, title, description, image) => template
   .replaceAll('__TITLE__', title.replace(/[&<>"']/g, ''))
@@ -127,7 +127,7 @@ const writePage = (path, title, description, image) => {
   mkdirSync(folder, { recursive: true });
   writeFileSync(join(folder, 'index.html'), page('/' + path.replaceAll('\\', '/') + (path ? '/' : ''), title, description, image));
 };
-writeFileSync(join(dist, 'index.html'), page('/', 'Lux Co South | Explore the watch collection', 'Explore watches by brand, style and price. Save favorites and inquire directly.', watches.find(w => w.image)?.image));
+writeFileSync(join(dist, 'index.html'), page('/', 'Watch Collection South | Explore the watch collection', 'Explore watches by brand, style and price. Save favorites and inquire directly.', '/logo.jpg'));
 for (const path of ['watches', 'brands', 'favorites', 'contact']) writePage(path, `${path[0].toUpperCase() + path.slice(1)} | Lux Co South`, 'Explore the Lux Co South watch collection.');
 for (const brand of brands) writePage(`watches/${brand.slug}`, `${brand.name} watches | Lux Co South`, `Explore ${brand.name} watches at Lux Co South.`);
 for (const watch of watches) writePage(`watch/${watch.id}`, `${watch.brand} ${watch.model} | Lux Co South`, `View ${watch.brand} ${watch.model}, Watch ID ${watch.id}, and inquire with Lux Co South.`, watch.image);
