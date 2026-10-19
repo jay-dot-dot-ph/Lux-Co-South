@@ -1138,3 +1138,33 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 @media (max-width: 360px) {
   .home-featured .collection-tile { grid-column: auto; }
 }
+
+/* Keep the photo and its text legible in both themes. */
+:root[data-theme="light"] .hero {
+  background: #080706 url('/hero-watch.png') center center / cover no-repeat;
+}
+:root[data-theme="light"] .hero h1 { color: #fff8ed; }
+:root[data-theme="light"] .hero-copy > .eyebrow { color: #edc77d; }
+:root[data-theme="light"] .hero-art { background: transparent; }
+:root[data-theme="light"] .hero-buttons .button-primary,
+:root[data-theme="light"] .hero-buttons .button-primary:hover { color: #171008; }
+
+/* Show every featured brand without a clipped card or native scrollbar. */
+.brand-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  overflow: visible;
+  padding: 0;
+  scroll-snap-type: none;
+}
+.brand-feature { min-width: 0; min-height: 205px; }
+:root[data-theme="light"] .home-brands .section-head h2,
+:root[data-theme="light"] .home-featured .section-head h2 { text-shadow: none; }
+@media (max-width: 900px) {
+  .brand-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .brand-feature-grid { grid-template-columns: 1fr; }
+  .brand-feature { min-height: 175px; }
+}
