@@ -21,6 +21,9 @@ let catalog;
 let favorites = new Set();
 let selection = new Set();
 let quickViewReturnFocus = null;
+let overlayReturnFocus = null;
+let compare = new Set();
+let catalogView = 'grid';
 let shown = 24;
 let filters = {
   query: new URLSearchParams(location.search).get('q') || '',
@@ -28,6 +31,8 @@ let filters = {
   availability: '', min: '', max: '', sort: 'newest'
 };
 try { favorites = new Set(JSON.parse(localStorage.getItem('lux-favorites') || '[]')); } catch {}
+try { compare = new Set(JSON.parse(sessionStorage.getItem('lux-compare') || '[]')); } catch {}
+try { catalogView = localStorage.getItem('lux-view') === 'list' ? 'list' : 'grid'; } catch {}
 
 const icon = {
   arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>',
@@ -38,7 +43,9 @@ const icon = {
   filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M7 12h10m-7 5h4"/><circle cx="8" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/></svg>',
   pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>',
   sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>',
-  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 15.7A8.6 8.6 0 0 1 8.3 3.6 8.6 8.6 0 1 0 20.4 15.7Z"/></svg>'
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 15.7A8.6 8.6 0 0 1 8.3 3.6 8.6 8.6 0 1 0 20.4 15.7Z"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>'
 };
 
 function themeButton() {
@@ -64,17 +71,17 @@ function image(watch, { eager = false } = {}) {
 }
 
 function brand() {
-  return '<a class="brand-lockup" href="/" aria-label="Watch Collection South home"><img src="/logo.jpg" alt="" width="64" height="64"><span><strong>WATCH COLLECTION</strong><em>SOUTH</em><small>CURATED TIMEPIECES</small></span></a>';
+  return '<a class="brand-lockup" href="/" aria-label="Watch Collection South home"><img src="/logo.jpg" alt="" width="64" height="64"><span><strong>WATCH COLLECTION</strong><em>SOUTH</em></span></a>';
 }
 
 function header(active = '') {
   const links = [['/', 'Discover'], ['/watches/', 'Watches'], ['/brands/', 'Brands'], ['/favorites/', 'Saved'], ['/contact/', 'Contact']];
   const nav = links.map(([href, label]) => `<a href="${href}" ${active === label ? 'aria-current="page"' : ''}>${label}${label === 'Saved' ? `<span class="nav-count">${favorites.size || ''}</span>` : ''}</a>`).join('');
-  return `<div class="announcement"><div class="wrap announcement-inner"><span>WATCH COLLECTION SOUTH <i></i> MANILA</span><span>Cash on delivery nationwide <b>·</b> Inspect before paying</span><a href="/#visit">Visit our store ${icon.arrow}</a></div></div>
+  return `<div class="announcement"><div class="wrap announcement-inner"><span>Cash on delivery nationwide · Inspect before paying</span></div></div>
   <header class="site-header"><div class="wrap header-inner">${brand()}
     <nav class="desktop-nav" aria-label="Main navigation">${nav}</nav>
     <div class="header-actions">
-      <a class="icon-link" href="/watches/" aria-label="Search watches">${icon.search}</a>
+      <button class="icon-link" type="button" data-open-search aria-label="Search watches">${icon.search}</button>
       ${themeButton()}
       <a class="icon-link saved-link" href="/favorites/" aria-label="Saved watches">${icon.heart}<span class="saved-count">${favorites.size || ''}</span></a>
       <button class="menu-button" type="button" data-menu aria-controls="mobile-menu" aria-expanded="false" aria-label="Open menu"><span></span><span></span></button>
@@ -82,17 +89,17 @@ function header(active = '') {
   </div><nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation" hidden>
     <div class="mobile-menu-top"><span>THE COLLECTION</span><button type="button" data-menu aria-label="Close menu">${icon.close}</button></div>
     ${nav}<a class="mobile-menu-contact" href="${CONTACT.messenger}" target="_blank" rel="noopener">Inquire on Messenger ${icon.arrow}</a>
-  </nav></header>`;
+  </nav></header><nav class="bottom-nav" aria-label="Quick navigation"><a href="/" ${active === 'Discover' ? 'aria-current="page"' : ''}>⌂<span>Home</span></a><a href="/watches/" ${active === 'Watches' ? 'aria-current="page"' : ''}>${icon.grid}<span>Watches</span></a><a href="/favorites/" ${active === 'Saved' ? 'aria-current="page"' : ''}>${icon.heart}<span>Saved</span></a><button type="button" data-open-search>${icon.search}<span>Search</span></button></nav>`;
 }
 
 function footer() {
   return `<footer class="site-footer"><div class="wrap footer-top">
-    <div class="footer-intro">${brand()}<p>A considered selection of watches for every moment worth remembering.</p><a href="/watches/" class="text-link">Explore the collection ${icon.arrow}</a></div>
+    <div class="footer-intro">${brand()}<p>Watches curated in Manila.</p><a href="/watches/" class="text-link">Browse watches ${icon.arrow}</a></div>
     <div class="footer-column"><h3>Explore</h3><a href="/watches/">All watches</a><a href="/brands/">Brands</a><a href="/favorites/">Your saved pieces</a></div>
     <div class="footer-column"><h3>Connect</h3><a href="${CONTACT.messenger}" target="_blank" rel="noopener">Messenger</a><a href="${CONTACT.facebook}" target="_blank" rel="noopener">Facebook</a><a href="tel:${CONTACT.phone}">${CONTACT.displayPhone}</a></div>
     <div class="footer-column"><h3>Visit us</h3><p>Forbes Commercial<br>Sampaloc, Manila</p><a href="${CONTACT.map}" target="_blank" rel="noopener">Get directions ${icon.arrow}</a></div>
   </div><div class="wrap footer-bottom"><span>© ${new Date().getFullYear()} Watch Collection South</span><span>Prices and availability are subject to confirmation.</span></div></footer>
-  <a class="chat-float" href="${CONTACT.messenger}" target="_blank" rel="noopener" aria-label="Chat on Messenger"><span>LET'S TALK WATCHES</span>${icon.arrow}</a>`;
+  <a class="chat-float" href="${CONTACT.messenger}" target="_blank" rel="noopener" aria-label="Chat on Messenger"><span>MESSAGE US</span>${icon.arrow}</a><div id="compare-dock"></div>`;
 }
 
 function card(watch) {
@@ -106,6 +113,7 @@ function card(watch) {
     <div class="card-body"><p class="card-brand">${esc(watch.brand)}</p><h3><a href="${link(watch)}">${esc(watch.model)}</a></h3>
       <p class="card-spec">${esc([watch.movement, watch.size].filter(Boolean).join(' · ') || watch.id)}</p>
       <div class="card-bottom"><strong>${money(watch.price)}</strong><span class="${watch.stock === 0 ? 'unavailable' : ''}">${stock(watch)}</span></div>
+      <button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button>
     </div>
   </article>`;
 }
@@ -115,7 +123,7 @@ function sectionHead(number, eyebrow, title, href, label = 'View all') {
 }
 
 function pageIntro(eyebrow, title, description, detail = '') {
-  return `<section class="page-intro"><div class="wrap page-intro-inner"><div><p class="eyebrow">${eyebrow}</p><h1>${title}</h1><p>${description}</p></div><span class="page-intro-detail">${detail || 'WATCH COLLECTION SOUTH'}</span></div></section>`;
+  return `<section class="page-intro"><div class="wrap page-intro-inner"><div><p class="eyebrow">${eyebrow}</p><h1>${title}</h1><p>${description}</p></div>${detail ? `<span class="page-intro-detail">${detail}</span>` : ''}</div></section>`;
 }
 
 function home() {
@@ -130,28 +138,23 @@ function home() {
     <section class="hero"><div class="wrap hero-layout">
       <div class="hero-copy"><p class="eyebrow">WATCH COLLECTION SOUTH <span class="gold-star">✧</span> MANILA</p>
         <h1>Time worth<br><em>keeping.</em></h1>
-        <p class="hero-description">A considered collection for the moments that stay with you. Discover the details, save what speaks to you, and find your next watch.</p>
-        <div class="hero-buttons"><a class="button button-primary" href="/watches/">EXPLORE THE COLLECTION ${icon.arrow}</a><a class="text-link" href="/brands/">DISCOVER THE BRANDS ${icon.arrow}</a></div>
-        <p class="hero-signature">CURATED IN MANILA <span></span> MADE FOR YOUR MOMENT</p>
+        <p class="hero-description">Discover your next watch. Browse, compare and save your favorites.</p>
+        <div class="hero-buttons"><a class="button button-primary" href="/watches/">BROWSE WATCHES ${icon.arrow}</a><button class="text-link hero-search" type="button" data-open-search>SEARCH THE COLLECTION ${icon.search}</button></div>
       </div>
       <div class="hero-art"><div class="hero-mark"><img src="/logo.jpg" alt="Watch Collection South"></div>
         <div class="hero-art-caption"><span>01 / THE COLLECTION</span><span>WATCH COLLECTION SOUTH</span></div>
       </div>
     </div>
-      <div class="hero-bottom"><div class="wrap"><span>${catalog.watches.length.toLocaleString()} WATCHES <i></i> ${catalog.brands.length} BRANDS</span><span>DISCOVER <span class="gold-star">✧</span> SAVE <span class="gold-star">✧</span> INQUIRE</span><span>INSPECT BEFORE PAYING</span></div></div>
+      <div class="hero-bottom"><div class="wrap"><span>${catalog.watches.length.toLocaleString()} WATCHES <i></i> ${catalog.brands.length} BRANDS</span></div></div>
     </section>
-    <section class="home-brands section-pad"><div class="wrap">${sectionHead('01', 'EXPLORE BY MAISON', 'Find a name that speaks to you.', '/brands/', 'All brands')}
+    <section class="home-brands section-pad"><div class="wrap">${sectionHead('01', 'BRANDS', 'Shop by brand.', '/brands/', 'All brands')}
       <div class="brand-feature-grid">${featuredBrands.map((brand, index) => `<a class="brand-feature" href="${brandLink(brand)}"><span class="brand-feature-top"><small>${String(index + 1).padStart(2, '0')}</small><span>${icon.arrow}</span></span><strong>${esc(brand.name)}</strong><span class="brand-feature-count">${brand.count} WATCHES</span></a>`).join('')}</div>
     </div></section>
-    <section class="home-featured section-pad"><div class="wrap">${sectionHead('02', 'CURATED SELECTION', 'Pieces worth a closer look.', '/watches/', 'View collection')}
+    <section class="home-featured section-pad"><div class="wrap">${sectionHead('02', 'FEATURED', 'Explore the collection.', '/watches/', 'View all')}
       <div class="watch-grid">${preview.map(card).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>
     </div></section>
-    <section class="home-story section-pad"><div class="wrap story-grid">
-      <div class="story-copy"><p class="eyebrow">03 / THE EXPERIENCE</p><h2>Explore with<br><em>intention.</em></h2><p>Search by brand or detail, keep the pieces that catch your eye, then ask us about the watches you love. Your shortlist stays in this browser until you're ready.</p></div>
-      <div class="story-steps"><div><span>01</span><strong>Discover</strong><p>Browse and refine the entire collection.</p></div><div><span>02</span><strong>Consider</strong><p>Save a personal selection of favorites.</p></div><div><span>03</span><strong>Connect</strong><p>Send a prepared inquiry through Messenger.</p></div></div>
-    </div></section>
     <section class="visit-section" id="visit"><div class="wrap visit-grid">
-      <div><p class="eyebrow">VISIT THE COLLECTION</p><h2>Experience it<br><em>in person.</em></h2><p>Find us at Forbes Commercial, Sampaloc, Manila. Ask about a Watch ID before visiting so we can confirm availability.</p>
+      <div><p class="eyebrow">VISIT US</p><h2>See it<br><em>in person.</em></h2><p>Forbes Commercial, Sampaloc, Manila. Ask us to confirm availability before visiting.</p>
         <a class="button button-primary" href="${CONTACT.map}" target="_blank" rel="noopener">GET DIRECTIONS ${icon.arrow}</a></div>
       <div class="visit-card"><span class="visit-card-top">WATCH COLLECTION SOUTH <span>✧</span> MANILA</span><img src="/logo.jpg" alt="" loading="lazy"><strong>Forbes Commercial<br>Sampaloc, Manila</strong><a href="tel:${CONTACT.phone}">${CONTACT.displayPhone}</a></div>
     </div></section>
@@ -175,14 +178,15 @@ function catalogPage() {
   const brand = catalog.brands.find(item => path === `/watches/${item.slug}`);
   if (brand) filters.brand = brand.name;
   app.innerHTML = header('Watches') + `<main>
-    ${pageIntro(brand ? 'THE MAISON EDIT' : 'THE COLLECTION', brand ? esc(brand.name) : 'Explore the collection.', brand ? `Discover every ${esc(brand.name)} piece in our selection.` : 'Find a watch for your next chapter. Refine by the details that matter.', brand ? `${brand.count} WATCHES` : `${catalog.watches.length} WATCHES · ${catalog.brands.length} BRANDS`)}
+    ${pageIntro(brand ? 'BRAND' : 'WATCHES', brand ? esc(brand.name) : 'Find your watch.', brand ? `${brand.count} watches` : `Browse ${catalog.watches.length} watches from ${catalog.brands.length} brands.`, '')}
     <section class="catalog-section"><div class="wrap catalog-layout">
       <div class="catalog-content"><div class="catalog-toolbar">
         <label class="search-box">${icon.search}<span class="sr-only">Search watches</span><input id="catalog-search" type="search" placeholder="Search brand, model or Watch ID" value="${esc(filters.query)}"></label>
         <label class="sort-box"><span>SORT BY</span><select id="sort"><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="brand">Brand: A–Z</option></select>${icon.chevron}</label>
+        <div class="view-switch" role="group" aria-label="Catalog view"><button type="button" data-view="grid" aria-label="Grid view" aria-pressed="${catalogView === 'grid'}">${icon.grid}</button><button type="button" data-view="list" aria-label="List view" aria-pressed="${catalogView === 'list'}">${icon.list}</button></div>
         <button class="filter-trigger" type="button" data-open-filters aria-controls="filter-panel" aria-expanded="false">${icon.filter} FILTERS</button>
       </div><aside class="filter-panel" id="filter-panel" aria-label="Catalog filters">${filterPanel()}</aside>
-      <div class="result-meta"><span id="result-count"></span><span>ALL PRICES IN PHILIPPINE PESOS</span></div><div class="active-filters" id="active-filters" aria-label="Active filters"></div><div id="results"></div></div>
+      <div class="result-meta"><span id="result-count"></span></div><div class="active-filters" id="active-filters" aria-label="Active filters"></div><div id="results"></div></div>
     </div></section>
   </main><button class="filter-overlay" type="button" data-close-filters aria-label="Close filters" hidden></button>` + footer();
   document.getElementById('sort').value = filters.sort;
@@ -193,6 +197,7 @@ function catalogPage() {
   document.getElementById('catalog-search').addEventListener('input', event => { filters.query = event.target.value; shown = 24; renderResults(); });
   document.getElementById('sort').addEventListener('change', event => { filters.sort = event.target.value; renderResults(); });
   renderResults();
+  updateCompareUI();
 }
 
 function renderResults() {
@@ -219,13 +224,13 @@ function renderResults() {
     `<button type="button" class="filter-chip" data-remove-filter="${key}" aria-label="Remove ${label.toLowerCase()} filter">${label}: ${esc(key === 'min' || key === 'max' ? money(filters[key]) : filters[key])} ${icon.close}</button>`
   ).join('');
   document.getElementById('results').innerHTML = rows.length
-    ? `<div class="watch-grid">${rows.slice(0, shown).map(card).join('')}</div>${rows.length > shown ? `<div class="load-more"><span>SHOWING ${Math.min(shown, rows.length)} OF ${rows.length}</span><button class="button button-outline" type="button" data-more>VIEW MORE WATCHES ${icon.arrow}</button></div>` : ''}`
+    ? `<div class="watch-grid ${catalogView === 'list' ? 'list-view' : ''}">${rows.slice(0, shown).map(card).join('')}</div>${rows.length > shown ? `<div class="load-more"><span>${Math.min(shown, rows.length)} OF ${rows.length}</span><button class="button button-outline" type="button" data-more>SHOW MORE ${icon.arrow}</button></div>` : ''}`
     : `<div class="empty-state"><span class="empty-symbol">✧</span><p class="eyebrow">NO MATCHES FOUND</p><h2>Nothing in this edit—yet.</h2><p>Try another search or start again with all watches.</p><button class="button button-outline" type="button" data-clear>RESET FILTERS ${icon.arrow}</button></div>`;
 }
 
 function brandsPage() {
   const brands = [...catalog.brands].sort((a, b) => a.name.localeCompare(b.name));
-  app.innerHTML = header('Brands') + `<main>${pageIntro('THE NAME BEHIND THE WATCH', 'Explore by brand.', 'Follow the names you love and discover the watches in each collection.', `${brands.length} BRANDS`)}
+  app.innerHTML = header('Brands') + `<main>${pageIntro('BRANDS', 'Shop by brand.', `Explore ${brands.length} brands.`)}
     <section class="brands-page section-pad"><div class="wrap"><div class="brand-page-header"><p>THE DIRECTORY</p><span>${brands.length} MAISONS · ${catalog.watches.length} WATCHES</span></div>
       <div class="brand-directory">${brands.map((brand, index) => `<a href="${brandLink(brand)}" class="brand-tile"><span class="brand-tile-index">${String(index + 1).padStart(2, '0')}</span><strong>${esc(brand.name)}</strong><span class="brand-tile-foot"><small>${brand.count} WATCHES</small>${icon.arrow}</span></a>`).join('')}</div>
     </div></section></main>` + footer();
@@ -249,11 +254,9 @@ function detailPage() {
     <div class="detail-grid">
       <div class="detail-info"><p class="eyebrow">ABOUT THIS PIECE</p>
         <p class="detail-description">${esc(watch.description || 'Ask us for more details about this watch.')}</p>
-        <div class="detail-actions"><button class="button button-primary" type="button" data-inquire="${esc(watch.id)}">INQUIRE ABOUT THIS PIECE ${icon.arrow}</button>
+        <div class="detail-actions"><button class="button button-primary" type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button>
           <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
-        <p class="detail-note">A prepared message will be copied for you to send through Messenger.</p>
-        <button class="copy-link" type="button" data-share="${esc(watch.id)}">COPY A LINK TO THIS WATCH ${icon.arrow}</button>
-        <div class="detail-assurance"><span>01 / SAVE TO YOUR SHORTLIST</span><span>02 / ASK US ABOUT AVAILABILITY</span><span>03 / INSPECT BEFORE PAYING</span></div>
+        <div class="detail-extra"><button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button><button class="copy-link" type="button" data-share="${esc(watch.id)}">COPY LINK ${icon.arrow}</button></div>
       </div>
       <div class="detail-media"><div class="detail-photo">${image(watch, { eager: true })}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
     </div>
@@ -266,7 +269,7 @@ function detailPage() {
 function favoritesPage() {
   const rows = catalog.watches.filter(watch => favorites.has(watch.id));
   selection = new Set([...selection].filter(id => rows.some(watch => watch.id === id)));
-  app.innerHTML = header('Saved') + `<main>${pageIntro('A PERSONAL SELECTION', 'Your saved pieces.', 'Keep the watches that stay on your mind in one place.', `${rows.length} SAVED`)}
+  app.innerHTML = header('Saved') + `<main>${pageIntro('SAVED', 'Your watches.', `${rows.length} saved`)}
     <section class="favorites-page section-pad"><div class="wrap">${rows.length
       ? `<div class="saved-toolbar"><span>${rows.length} ${rows.length === 1 ? 'PIECE' : 'PIECES'} IN YOUR SHORTLIST</span><button type="button" data-select-all>${selection.size === rows.length ? 'DESELECT ALL' : 'SELECT ALL'}</button></div>
         <div class="saved-list">${rows.map(watch => `<div class="saved-row">
@@ -279,12 +282,13 @@ function favoritesPage() {
         <div class="saved-actions"><span>${selection.size} SELECTED FOR INQUIRY</span><button class="button button-primary" type="button" data-inquire-selected ${selection.size ? '' : 'disabled'}>INQUIRE ABOUT SELECTED ${icon.arrow}</button></div>`
       : `<div class="empty-state"><span class="empty-symbol">♡</span><p class="eyebrow">YOUR SHORTLIST AWAITS</p><h2>Start with a piece you love.</h2><p>Tap the heart on any watch to save it here for later.</p><a class="button button-primary" href="/watches/">EXPLORE THE COLLECTION ${icon.arrow}</a></div>`}
     </div></section></main>` + footer();
+  updateCompareUI();
 }
 
 function contactPage() {
-  app.innerHTML = header('Contact') + `<main>${pageIntro('BEGIN A CONVERSATION', "Let's talk watches.", 'Ask about a piece, request more details, or plan a visit.', 'MANILA · PHILIPPINES')}
+  app.innerHTML = header('Contact') + `<main>${pageIntro('CONTACT', "Let's talk watches.", 'Ask about a watch or plan a visit.')}
     <section class="contact-page section-pad"><div class="wrap">
-      <div class="contact-lead"><div><p class="eyebrow">WE'RE HERE TO HELP</p><h2>A conversation is<br><em>the first step.</em></h2><p>Each watch page prepares an inquiry with its Watch ID, price and link. Save several pieces to ask about them together, or reach out directly below.</p><a class="text-link" href="/watches/">Browse the collection ${icon.arrow}</a></div><img src="/logo.jpg" alt="Watch Collection South" loading="lazy"></div>
+      <div class="contact-lead"><div><p class="eyebrow">GET IN TOUCH</p><h2>How can we<br><em>help?</em></h2><p>Ask about availability, details or visiting the store.</p><a class="text-link" href="/watches/">Browse watches ${icon.arrow}</a></div><img src="/logo.jpg" alt="Watch Collection South" loading="lazy"></div>
       <div class="contact-methods"><p class="eyebrow">CHOOSE HOW TO CONNECT</p>
         <a href="${CONTACT.messenger}" target="_blank" rel="noopener"><span>01</span><div><small>MESSAGE US</small><strong>Messenger</strong></div>${icon.arrow}</a>
         <a href="tel:${CONTACT.phone}"><span>02</span><div><small>GIVE US A CALL</small><strong>${CONTACT.displayPhone}</strong></div>${icon.arrow}</a>
@@ -316,6 +320,7 @@ function openQuickView(id, trigger) {
       <div class="quick-price"><strong>${money(watch.price)}</strong><span>${stock(watch)}</span></div>
       <div class="quick-actions"><button class="button button-primary" type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button>
         <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
+      <button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button>
       <a class="text-link" href="${link(watch)}">VIEW ALL DETAILS ${icon.arrow}</a>
     </div>
   </section>`;
@@ -331,6 +336,81 @@ function closeQuickView(restoreFocus = true) {
   document.body.classList.remove('modal-open');
   if (restoreFocus && quickViewReturnFocus?.isConnected) quickViewReturnFocus.focus();
   quickViewReturnFocus = null;
+}
+
+function closeOverlay(restoreFocus = true) {
+  const overlay = document.querySelector('.utility-backdrop');
+  if (!overlay) return;
+  overlay.remove();
+  document.body.classList.remove('modal-open');
+  if (restoreFocus && overlayReturnFocus?.isConnected) overlayReturnFocus.focus();
+  overlayReturnFocus = null;
+}
+
+function searchMatches(query) {
+  const term = query.trim().toLowerCase();
+  if (!term) return [];
+  return catalog.watches.filter(watch => [watch.brand, watch.model, watch.id, watch.movement, watch.size].some(value => String(value || '').toLowerCase().includes(term))).slice(0, 6);
+}
+
+function updateSearchSuggestions() {
+  const input = document.getElementById('global-search');
+  const output = document.getElementById('search-suggestions');
+  if (!input || !output) return;
+  const query = input.value.trim();
+  const matches = searchMatches(query);
+  output.innerHTML = !query ? `<p class="search-hint">Search by brand, model or Watch ID.</p>`
+    : `<div class="search-results-head"><span>${matches.length ? 'MATCHING WATCHES' : 'NO MATCHES'}</span><a href="/watches/?q=${encodeURIComponent(query)}">ALL RESULTS ${icon.arrow}</a></div>
+      ${matches.map(watch => `<a class="search-result" href="${link(watch)}"><span class="search-thumb">${image(watch)}</span><span><small>${esc(watch.brand)} · ${esc(watch.id)}</small><strong>${esc(watch.model)}</strong></span><em>${money(watch.price)}</em></a>`).join('')}`;
+}
+
+function openSearch(trigger) {
+  closeQuickView(false);
+  closeOverlay(false);
+  overlayReturnFocus = trigger;
+  const overlay = document.createElement('div');
+  overlay.className = 'utility-backdrop';
+  overlay.innerHTML = `<section class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-title"><div class="utility-head"><div><p class="eyebrow">WATCH COLLECTION SOUTH</p><h2 id="search-title">Find a watch</h2></div><button class="utility-close" type="button" data-close-overlay aria-label="Close search">${icon.close}</button></div><label class="global-search-box">${icon.search}<span class="sr-only">Search watches</span><input id="global-search" type="search" placeholder="Brand, model or Watch ID" autocomplete="off"></label><div id="search-suggestions" aria-live="polite"></div></section>`;
+  document.body.appendChild(overlay);
+  document.body.classList.add('modal-open');
+  overlay.querySelector('#global-search').focus();
+  updateSearchSuggestions();
+}
+
+function updateCompareUI() {
+  const rows = catalog.watches.filter(watch => compare.has(watch.id));
+  document.querySelectorAll('[data-compare]').forEach(button => {
+    const added = compare.has(button.dataset.compare);
+    button.classList.toggle('is-compared', added);
+    button.setAttribute('aria-pressed', String(added));
+    button.textContent = added ? '✓ Added to compare' : '+ Compare';
+  });
+  const dock = document.getElementById('compare-dock');
+  if (dock) dock.innerHTML = rows.length ? `<div class="compare-dock"><span><strong>${rows.length}/3</strong> watches selected</span><div><button type="button" data-clear-compare>Clear</button><button class="button button-primary" type="button" data-open-compare ${rows.length < 2 ? 'disabled' : ''}>COMPARE ${icon.arrow}</button></div></div>` : '';
+  if (document.querySelector('.compare-dialog')) renderCompareDialog();
+}
+
+function renderCompareDialog() {
+  const dialog = document.querySelector('.compare-dialog');
+  if (!dialog) return;
+  const rows = catalog.watches.filter(watch => compare.has(watch.id));
+  if (rows.length < 2) { closeOverlay(); return; }
+  const specs = [['Brand', 'brand'], ['Size', 'size'], ['Movement', 'movement'], ['Dial', 'dialColor'], ['Case', 'caseMaterial'], ['Strap', 'strapMaterial']];
+  dialog.innerHTML = `<div class="utility-head"><div><p class="eyebrow">SIDE BY SIDE</p><h2 id="compare-title">Compare watches</h2></div><button class="utility-close" type="button" data-close-overlay aria-label="Close comparison">${icon.close}</button></div><div class="compare-grid">${rows.map(watch => `<article class="compare-item"><div class="compare-photo">${image(watch)}</div><div class="compare-item-head"><small>${esc(watch.brand)} · ${esc(watch.id)}</small><button type="button" data-compare="${esc(watch.id)}" aria-label="Remove ${esc(name(watch))} from comparison">${icon.close}</button></div><h3><a href="${link(watch)}">${esc(watch.model)}</a></h3><strong class="compare-price">${money(watch.price)}</strong><span class="compare-stock">${stock(watch)}</span><dl>${specs.map(([label, key]) => `<div><dt>${label}</dt><dd>${esc(watch[key] || '—')}</dd></div>`).join('')}</dl><a class="button button-outline" href="${link(watch)}">VIEW WATCH ${icon.arrow}</a></article>`).join('')}</div>`;
+}
+
+function openCompare(trigger) {
+  if (compare.size < 2) return;
+  closeQuickView(false);
+  closeOverlay(false);
+  overlayReturnFocus = trigger;
+  const overlay = document.createElement('div');
+  overlay.className = 'utility-backdrop';
+  overlay.innerHTML = '<section class="compare-dialog" role="dialog" aria-modal="true" aria-labelledby="compare-title"></section>';
+  document.body.appendChild(overlay);
+  document.body.classList.add('modal-open');
+  renderCompareDialog();
+  overlay.querySelector('.utility-close')?.focus();
 }
 
 function toast(message) {
@@ -366,9 +446,9 @@ async function copyText(value) {
 function inquiry(watches) {
   if (watches.length === 1) {
     const watch = watches[0];
-    return `Hello Graceful Gifts Manila!\n\nI saw this watch on the Lux Co South website:\n${name(watch)}\nWatch ID: ${watch.id}\nPrice: ${money(watch.price)}\nWatch link: ${location.origin}${link(watch)}\n\n${watch.stock === 0 ? 'I noticed it is sold out. Do you have another unit or a similar model?' : 'Is this still available?'}`;
+    return `Hello Graceful Gifts Manila!\n\nI saw this watch on Watch Collection South:\n${name(watch)}\nWatch ID: ${watch.id}\nPrice: ${money(watch.price)}\nWatch link: ${location.origin}${link(watch)}\n\n${watch.stock === 0 ? 'I noticed it is sold out. Do you have another unit or a similar model?' : 'Is this still available?'}`;
   }
-  return `Hello Graceful Gifts Manila!\n\nI'm interested in these watches from Lux Co South:\n\n${watches.map((watch, index) => `${index + 1}. ${name(watch)}\n   Watch ID: ${watch.id}\n   ${money(watch.price)}\n   ${location.origin}${link(watch)}`).join('\n\n')}\n\nWhich are currently available?`;
+  return `Hello Graceful Gifts Manila!\n\nI'm interested in these watches from Watch Collection South:\n\n${watches.map((watch, index) => `${index + 1}. ${name(watch)}\n   Watch ID: ${watch.id}\n   ${money(watch.price)}\n   ${location.origin}${link(watch)}`).join('\n\n')}\n\nWhich are currently available?`;
 }
 
 async function handleInquiry(button, watches) {
@@ -404,6 +484,34 @@ function closeFilters() {
 }
 
 document.addEventListener('click', async event => {
+  const searchTrigger = event.target.closest('[data-open-search]');
+  if (searchTrigger) { openSearch(searchTrigger); return; }
+  if (event.target.matches('.utility-backdrop') || event.target.closest('[data-close-overlay]')) { closeOverlay(); return; }
+  const view = event.target.closest('[data-view]');
+  if (view) {
+    catalogView = view.dataset.view;
+    try { localStorage.setItem('lux-view', catalogView); } catch {}
+    document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === catalogView)));
+    renderResults();
+    return;
+  }
+  const compareButton = event.target.closest('[data-compare]');
+  if (compareButton) {
+    const id = compareButton.dataset.compare;
+    if (compare.has(id)) compare.delete(id);
+    else if (compare.size >= 3) { toast('Compare up to three watches.'); return; }
+    else compare.add(id);
+    try { sessionStorage.setItem('lux-compare', JSON.stringify([...compare])); } catch {}
+    updateCompareUI();
+    return;
+  }
+  if (event.target.closest('[data-open-compare]')) { openCompare(event.target.closest('[data-open-compare]')); return; }
+  if (event.target.closest('[data-clear-compare]')) {
+    compare.clear();
+    try { sessionStorage.removeItem('lux-compare'); } catch {}
+    updateCompareUI();
+    return;
+  }
   if (event.target.closest('[data-theme-toggle]')) {
     setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
     return;
@@ -475,16 +583,29 @@ document.addEventListener('change', event => {
     favoritesPage();
   }
 });
+document.addEventListener('input', event => {
+  if (event.target.id === 'global-search') updateSearchSuggestions();
+});
 document.addEventListener('keydown', event => {
-  const modal = document.querySelector('.quick-view-backdrop');
+  const modal = document.querySelector('.utility-backdrop') || document.querySelector('.quick-view-backdrop');
   if (modal && event.key === 'Tab') {
-    const controls = [...modal.querySelectorAll('button, a[href]')].filter(element => !element.disabled);
+    const controls = [...modal.querySelectorAll('button, a[href], input')].filter(element => !element.disabled);
     const first = controls[0], last = controls.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   }
+  if ((event.key === '/' || (event.key.toLowerCase() === 'k' && (event.ctrlKey || event.metaKey))) && !modal && !event.target.closest('input, textarea, select, [contenteditable="true"]')) {
+    event.preventDefault();
+    openSearch(document.activeElement);
+    return;
+  }
+  if (event.key === 'Enter' && event.target.id === 'global-search') {
+    event.preventDefault();
+    location.href = '/watches/?q=' + encodeURIComponent(event.target.value.trim());
+    return;
+  }
   if (event.key === 'Escape') {
-    if (modal) { closeQuickView(); return; }
+    if (modal) { modal.classList.contains('utility-backdrop') ? closeOverlay() : closeQuickView(); return; }
     closeFilters();
     const menu = document.getElementById('mobile-menu');
     if (menu && !menu.hidden) {
@@ -503,6 +624,7 @@ function render() {
   else if (path === '/contact') contactPage();
   else if (path.startsWith('/watch/')) detailPage();
   else app.innerHTML = header() + `<main class="wrap empty-state page-empty"><span class="empty-symbol">✧</span><h1>Page not found.</h1><p>Let's find a watch instead.</p><a class="button button-primary" href="/watches/">EXPLORE WATCHES ${icon.arrow}</a></main>` + footer();
+  updateCompareUI();
 }
 
 setTheme(document.documentElement.dataset.theme || 'dark', false);
