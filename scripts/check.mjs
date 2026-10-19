@@ -12,6 +12,8 @@ assert.equal(catalog.brands.reduce((sum, brand) => sum + brand.count, 0), catalo
 assert.equal(new Set(catalog.watches.map(w => w.id)).size, catalog.watches.length, 'Duplicate Watch IDs');
 assert(existsSync(join(dist, 'index.html')) && existsSync(join(dist, 'app.js')) && existsSync(join(dist, 'styles.css')));
 assert(existsSync(join(dist, 'logo.jpg')), 'Brand logo missing from build');
+assert(existsSync(join(dist, 'hero-watch.png')), 'Hero photograph missing from build');
+assert(catalog.watches.filter(watch => watch.image).length >= Math.floor(catalog.watches.length * .95), 'Too many product photos missing from build');
 assert(/href="\/styles\.css\?v=[a-f0-9]{12}"/.test(readFileSync(join(dist, 'index.html'), 'utf8')), 'Versioned design stylesheet missing from pages');
 for (const brand of catalog.brands) assert(existsSync(join(dist, 'watches', brand.slug, 'index.html')), `Missing ${brand.name} route`);
 for (const watch of catalog.watches) {

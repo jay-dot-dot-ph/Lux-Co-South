@@ -27,7 +27,7 @@ let catalogView = 'grid';
 let shown = 24;
 let filters = {
   query: new URLSearchParams(location.search).get('q') || '',
-  brand: '', size: '', dial: '', movement: '', category: '',
+  brand: '', size: '', dial: '', movement: '', category: '', strap: '',
   availability: '', min: '', max: '', sort: 'newest'
 };
 try { favorites = new Set(JSON.parse(localStorage.getItem('lux-favorites') || '[]')); } catch {}
@@ -44,6 +44,7 @@ const icon = {
   pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>',
   sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>',
   moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 15.7A8.6 8.6 0 0 1 8.3 3.6 8.6 8.6 0 1 0 20.4 15.7Z"/></svg>',
+  message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 10h8m-8 3h5"/></svg>',
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>'
 };
@@ -75,13 +76,12 @@ function brand() {
 }
 
 function header(active = '') {
-  const links = [['/', 'Discover'], ['/watches/', 'Watches'], ['/brands/', 'Brands'], ['/favorites/', 'Saved'], ['/contact/', 'Contact']];
+  const links = [['/', 'Home'], ['/watches/', 'Collection'], ['/brands/', 'Brands'], ['/#about', 'About'], ['/contact/', 'Contact']];
   const nav = links.map(([href, label]) => `<a href="${href}" ${active === label ? 'aria-current="page"' : ''}>${label}${label === 'Saved' ? `<span class="nav-count">${favorites.size || ''}</span>` : ''}</a>`).join('');
-  return `<div class="announcement"><div class="wrap announcement-inner"><span>Cash on delivery nationwide · Inspect before paying</span></div></div>
-  <header class="site-header"><div class="wrap header-inner">${brand()}
+  return `<header class="site-header"><div class="wrap header-inner">${brand()}
     <nav class="desktop-nav" aria-label="Main navigation">${nav}</nav>
     <div class="header-actions">
-      <button class="icon-link" type="button" data-open-search aria-label="Search watches">${icon.search}</button>
+      <button class="header-search" type="button" data-open-search><span>Search watches...</span>${icon.search}</button>
       ${themeButton()}
       <a class="icon-link saved-link" href="/favorites/" aria-label="Saved watches">${icon.heart}<span class="saved-count">${favorites.size || ''}</span></a>
       <button class="menu-button" type="button" data-menu aria-controls="mobile-menu" aria-expanded="false" aria-label="Open menu"><span></span><span></span></button>
@@ -89,7 +89,7 @@ function header(active = '') {
   </div><nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation" hidden>
     <div class="mobile-menu-top"><span>THE COLLECTION</span><button type="button" data-menu aria-label="Close menu">${icon.close}</button></div>
     ${nav}<a class="mobile-menu-contact" href="${CONTACT.messenger}" target="_blank" rel="noopener">Inquire on Messenger ${icon.arrow}</a>
-  </nav></header><nav class="bottom-nav" aria-label="Quick navigation"><a href="/" ${active === 'Discover' ? 'aria-current="page"' : ''}>⌂<span>Home</span></a><a href="/watches/" ${active === 'Watches' ? 'aria-current="page"' : ''}>${icon.grid}<span>Watches</span></a><a href="/favorites/" ${active === 'Saved' ? 'aria-current="page"' : ''}>${icon.heart}<span>Saved</span></a><button type="button" data-open-search>${icon.search}<span>Search</span></button></nav>`;
+  </nav></header><nav class="bottom-nav" aria-label="Quick navigation"><a href="/" ${active === 'Home' ? 'aria-current="page"' : ''}>⌂<span>Home</span></a><a href="/watches/" ${active === 'Collection' ? 'aria-current="page"' : ''}>${icon.grid}<span>Watches</span></a><a href="/favorites/" ${active === 'Saved' ? 'aria-current="page"' : ''}>${icon.heart}<span>Saved</span></a><button type="button" data-open-search>${icon.search}<span>Search</span></button></nav>`;
 }
 
 function footer() {
@@ -112,7 +112,7 @@ function card(watch) {
     </div>
     <div class="card-body"><p class="card-brand">${esc(watch.brand)}</p><h3><a href="${link(watch)}">${esc(watch.model)}</a></h3>
       <p class="card-spec">${esc([watch.movement, watch.size].filter(Boolean).join(' · ') || watch.id)}</p>
-      <div class="card-bottom"><strong>${money(watch.price)}</strong><span class="${watch.stock === 0 ? 'unavailable' : ''}">${stock(watch)}</span></div>
+      <div class="card-bottom"><div><strong>${money(watch.price)}</strong><span class="${watch.stock === 0 ? 'unavailable' : ''}">${stock(watch)}</span></div><button class="card-inquire" type="button" data-inquire="${esc(watch.id)}" aria-label="Inquire about ${esc(name(watch))}" title="Inquire">${icon.message}</button></div>
       <button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button>
     </div>
   </article>`;
@@ -134,16 +134,15 @@ function home() {
     if (watch.image && !preview.some(item => item.id === watch.id)) preview.push(watch);
   }
   const featuredBrands = [...catalog.brands].sort((a, b) => b.count - a.count).slice(0, 6);
-  app.innerHTML = header('Discover') + `<main>
+  app.innerHTML = header('Home') + `<main>
     <section class="hero"><div class="wrap hero-layout">
-      <div class="hero-copy"><p class="eyebrow">WATCH COLLECTION SOUTH <span class="gold-star">✧</span> MANILA</p>
-        <h1>Time worth<br><em>keeping.</em></h1>
-        <p class="hero-description">Discover your next watch. Browse, compare and save your favorites.</p>
-        <div class="hero-buttons"><a class="button button-primary" href="/watches/">BROWSE WATCHES ${icon.arrow}</a><button class="text-link hero-search" type="button" data-open-search>SEARCH THE COLLECTION ${icon.search}</button></div>
+      <div class="hero-copy"><p class="eyebrow">TIMELESS STYLE</p>
+        <h1>WATCH<br>COLLECTION<br>SOUTH</h1>
+        <p class="hero-description">A curated collection of timepieces for everyday elegance.</p>
+        <div class="hero-buttons"><a class="button button-primary" href="/watches/">EXPLORE COLLECTION ${icon.arrow}</a></div>
+        <div class="hero-promises"><span>✧ <small>CURATED<br>SELECTION</small></span><span>◇ <small>INSPECT BEFORE<br>PAYING</small></span><span>⇢ <small>NATIONWIDE<br>DELIVERY</small></span></div>
       </div>
-      <div class="hero-art"><div class="hero-mark"><img src="/logo.jpg" alt="Watch Collection South"></div>
-        <div class="hero-art-caption"><span>01 / THE COLLECTION</span><span>WATCH COLLECTION SOUTH</span></div>
-      </div>
+      <div class="hero-art"><div class="hero-mark"><img src="/logo.jpg" alt="Watch Collection South"></div></div>
     </div>
       <div class="hero-bottom"><div class="wrap"><span>${catalog.watches.length.toLocaleString()} WATCHES <i></i> ${catalog.brands.length} BRANDS</span></div></div>
     </section>
@@ -153,7 +152,7 @@ function home() {
     <section class="home-featured section-pad"><div class="wrap">${sectionHead('02', 'FEATURED', 'Explore the collection.', '/watches/', 'View all')}
       <div class="watch-grid">${preview.map(card).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>
     </div></section>
-    <section class="visit-section" id="visit"><div class="wrap visit-grid">
+    <section class="visit-section" id="about"><div class="wrap visit-grid">
       <div><p class="eyebrow">VISIT US</p><h2>See it<br><em>in person.</em></h2><p>Forbes Commercial, Sampaloc, Manila. Ask us to confirm availability before visiting.</p>
         <a class="button button-primary" href="${CONTACT.map}" target="_blank" rel="noopener">GET DIRECTIONS ${icon.arrow}</a></div>
       <div class="visit-card"><span class="visit-card-top">WATCH COLLECTION SOUTH <span>✧</span> MANILA</span><img src="/logo.jpg" alt="" loading="lazy"><strong>Forbes Commercial<br>Sampaloc, Manila</strong><a href="tel:${CONTACT.phone}">${CONTACT.displayPhone}</a></div>
@@ -163,30 +162,31 @@ function home() {
 
 const options = (values, label) => `<option value="">${label}</option>${[...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b)).map(value => `<option value="${esc(value)}">${esc(value)}</option>`).join('')}`;
 function filterPanel() {
-  return `<div class="filter-heading"><div><p class="eyebrow">THE DETAILS</p><h2>Refine your search</h2></div><button type="button" data-close-filters aria-label="Close filters">${icon.close}</button></div>
-    <div class="filter-group"><label for="filter-brand">Brand</label><select id="filter-brand" data-filter="brand">${options(catalog.brands.map(brand => brand.name), 'All brands')}</select></div>
-    <div class="filter-group"><label for="filter-size">Size</label><select id="filter-size" data-filter="size">${options(catalog.watches.map(watch => watch.size), 'Any size')}</select></div>
-    <div class="filter-group"><label for="filter-dial">Dial color</label><select id="filter-dial" data-filter="dial">${options(catalog.watches.map(watch => watch.dialColor), 'Any dial')}</select></div>
-    <div class="filter-group"><label for="filter-movement">Movement</label><select id="filter-movement" data-filter="movement">${options(catalog.watches.map(watch => watch.movement), 'Any movement')}</select></div>
-    <div class="filter-group"><label for="filter-category">Category</label><select id="filter-category" data-filter="category">${options(catalog.watches.map(watch => watch.category), 'Any category')}</select></div>
-    <div class="filter-group"><label for="filter-availability">Availability</label><select id="filter-availability" data-filter="availability"><option value="">All watches</option><option value="available">Available</option><option value="soldout">Sold out</option></select></div>
-    <fieldset class="filter-price"><legend>Price range</legend><div><label><span class="sr-only">Minimum price</span><input type="number" data-filter="min" min="0" placeholder="Min ₱"></label><label><span class="sr-only">Maximum price</span><input type="number" data-filter="max" min="0" placeholder="Max ₱"></label></div></fieldset>
-    <button class="filter-clear" type="button" data-clear>Clear all filters ${icon.arrow}</button>`;
+  const ceiling = Math.ceil(Math.max(...catalog.watches.map(watch => watch.price || 0)) / 1000) * 1000;
+  const categories = ['CHRONOGRAPH', 'DRESS', 'DIVER', 'SKELETON'];
+  const colors = [['Black', '#121212'], ['White', '#f4eee5'], ['Blue', '#244d86'], ['Green', '#1d6846'], ['Gold', '#bd8b48'], ['Pink', '#d99aa0']];
+  const choice = (key, value, label) => `<button class="filter-choice ${filters[key] === value ? 'selected' : ''}" type="button" data-filter-choice="${key}" data-value="${esc(value)}" aria-pressed="${filters[key] === value}"><span class="choice-box" aria-hidden="true"></span>${label}</button>`;
+  return `<div class="filter-heading"><h2>FILTERS</h2><button type="button" data-clear>Clear all</button><button class="filter-close" type="button" data-close-filters aria-label="Close filters">${icon.close}</button></div>
+    <details class="filter-section" open><summary>Style</summary><div class="filter-choices">${categories.map(value => choice('category', value, value[0] + value.slice(1).toLowerCase())).join('')}</div></details>
+    <details class="filter-section" open><summary>Price range</summary><div class="price-range"><input type="range" data-price-range min="0" max="${ceiling}" step="500" value="${filters.max || ceiling}" aria-label="Maximum price"><div><span>₱0</span><output id="price-max-label">${filters.max ? money(filters.max) : money(ceiling) + '+'}</output></div><label class="price-min">From <input type="number" data-filter="min" min="0" placeholder="Any amount" value="${esc(filters.min)}"></label></div></details>
+    <details class="filter-section" open><summary>Dial color</summary><div class="dial-swatches">${colors.map(([color, hex]) => `<button type="button" class="dial-swatch ${filters.dial === color ? 'selected' : ''}" data-filter-choice="dial" data-value="${color}" aria-label="${color} dial" aria-pressed="${filters.dial === color}" title="${color}"><span style="background:${hex}"></span></button>`).join('')}</div><span class="swatch-name">${filters.dial || 'Any color'}</span></details>
+    <details class="filter-section" open><summary>Strap type</summary><div class="filter-choices">${['Stainless Steel', 'Leather', 'Rubber', 'Other'].map(value => choice('strap', value, value)).join('')}</div></details>
+    <details class="filter-section"><summary>More filters</summary><div class="filter-more"><div class="filter-group"><label for="filter-brand">Brand</label><select id="filter-brand" data-filter="brand">${options(catalog.brands.map(brand => brand.name), 'All brands')}</select></div><div class="filter-group"><label for="filter-size">Size</label><select id="filter-size" data-filter="size">${options(catalog.watches.map(watch => watch.size), 'Any size')}</select></div><div class="filter-group"><label for="filter-movement">Movement</label><select id="filter-movement" data-filter="movement">${options(catalog.watches.map(watch => watch.movement), 'Any movement')}</select></div><div class="filter-group"><label for="filter-availability">Availability</label><select id="filter-availability" data-filter="availability"><option value="">All watches</option><option value="available">Available</option><option value="soldout">Sold out</option></select></div></div></details>`;
 }
 
 function catalogPage() {
   const brand = catalog.brands.find(item => path === `/watches/${item.slug}`);
   if (brand) filters.brand = brand.name;
-  app.innerHTML = header('Watches') + `<main>
-    ${pageIntro(brand ? 'BRAND' : 'WATCHES', brand ? esc(brand.name) : 'Find your watch.', brand ? `${brand.count} watches` : `Browse ${catalog.watches.length} watches from ${catalog.brands.length} brands.`, '')}
+  app.innerHTML = header('Collection') + `<main>
+    <section class="collection-banner"><div class="wrap"><p class="eyebrow">WATCH COLLECTION SOUTH</p><h1>${brand ? esc(brand.name) : 'OUR COLLECTION'}</h1><p>Discover timepieces that match your style.</p></div></section>
     <section class="catalog-section"><div class="wrap catalog-layout">
+      <aside class="filter-panel" id="filter-panel" aria-label="Catalog filters">${filterPanel()}</aside>
       <div class="catalog-content"><div class="catalog-toolbar">
-        <label class="search-box">${icon.search}<span class="sr-only">Search watches</span><input id="catalog-search" type="search" placeholder="Search brand, model or Watch ID" value="${esc(filters.query)}"></label>
+        <span class="toolbar-count" id="result-count"></span>
         <label class="sort-box"><span>SORT BY</span><select id="sort"><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="brand">Brand: A–Z</option></select>${icon.chevron}</label>
         <div class="view-switch" role="group" aria-label="Catalog view"><button type="button" data-view="grid" aria-label="Grid view" aria-pressed="${catalogView === 'grid'}">${icon.grid}</button><button type="button" data-view="list" aria-label="List view" aria-pressed="${catalogView === 'list'}">${icon.list}</button></div>
         <button class="filter-trigger" type="button" data-open-filters aria-controls="filter-panel" aria-expanded="false">${icon.filter} FILTERS</button>
-      </div><aside class="filter-panel" id="filter-panel" aria-label="Catalog filters">${filterPanel()}</aside>
-      <div class="result-meta"><span id="result-count"></span></div><div class="active-filters" id="active-filters" aria-label="Active filters"></div><div id="results"></div></div>
+      </div><div class="active-filters" id="active-filters" aria-label="Active filters"></div><div id="results"></div></div>
     </div></section>
   </main><button class="filter-overlay" type="button" data-close-filters aria-label="Close filters" hidden></button>` + footer();
   document.getElementById('sort').value = filters.sort;
@@ -194,7 +194,12 @@ function catalogPage() {
     element.value = filters[element.dataset.filter] || '';
     element.addEventListener('input', () => { filters[element.dataset.filter] = element.value; shown = 24; renderResults(); });
   });
-  document.getElementById('catalog-search').addEventListener('input', event => { filters.query = event.target.value; shown = 24; renderResults(); });
+  document.querySelector('[data-price-range]').addEventListener('input', event => {
+    filters.max = Number(event.target.value) >= Number(event.target.max) ? '' : event.target.value;
+    document.getElementById('price-max-label').textContent = filters.max ? money(filters.max) : money(event.target.max) + '+';
+    shown = 24;
+    renderResults();
+  });
   document.getElementById('sort').addEventListener('change', event => { filters.sort = event.target.value; renderResults(); });
   renderResults();
   updateCompareUI();
@@ -206,9 +211,12 @@ function renderResults() {
     (!query || [watch.brand, watch.model, watch.id, watch.description].join(' ').toLowerCase().includes(query))
     && (!filters.brand || watch.brand === filters.brand)
     && (!filters.size || watch.size === filters.size)
-    && (!filters.dial || watch.dialColor === filters.dial)
+    && (!filters.dial || (watch.dialColor || '').toLowerCase().includes(filters.dial.toLowerCase()))
     && (!filters.movement || watch.movement === filters.movement)
     && (!filters.category || watch.category === filters.category)
+    && (!filters.strap || (filters.strap === 'Other'
+      ? Boolean(watch.strapMaterial) && !/steel|leather|rubber/i.test(watch.strapMaterial)
+      : (watch.strapMaterial || '').toLowerCase().includes(filters.strap.toLowerCase())))
     && (!filters.availability || (filters.availability === 'soldout' ? watch.stock === 0 : watch.stock !== 0))
     && (!filters.min || (watch.price != null && watch.price >= Number(filters.min)))
     && (!filters.max || (watch.price != null && watch.price <= Number(filters.max)))
@@ -217,8 +225,15 @@ function renderResults() {
   else if (filters.sort === 'price-desc') rows.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
   else if (filters.sort === 'brand') rows.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
   else rows.sort((a, b) => (b.dateAdded || '').localeCompare(a.dateAdded || ''));
-  document.getElementById('result-count').textContent = `${rows.length.toLocaleString()} ${rows.length === 1 ? 'piece' : 'pieces'}`;
-  const filterNames = { query: 'Search', brand: 'Brand', size: 'Size', dial: 'Dial', movement: 'Movement', category: 'Category', availability: 'Stock', min: 'From', max: 'To' };
+  document.getElementById('result-count').textContent = `Showing ${Math.min(shown, rows.length)} of ${rows.length.toLocaleString()} watches`;
+  document.querySelectorAll('[data-filter-choice]').forEach(button => {
+    const selected = filters[button.dataset.filterChoice] === button.dataset.value;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  const swatchName = document.querySelector('.swatch-name');
+  if (swatchName) swatchName.textContent = filters.dial || 'Any color';
+  const filterNames = { query: 'Search', brand: 'Brand', size: 'Size', dial: 'Dial', movement: 'Movement', category: 'Style', strap: 'Strap', availability: 'Stock', min: 'From', max: 'To' };
   const active = Object.entries(filterNames).filter(([key]) => filters[key]);
   document.getElementById('active-filters').innerHTML = active.map(([key, label]) =>
     `<button type="button" class="filter-chip" data-remove-filter="${key}" aria-label="Remove ${label.toLowerCase()} filter">${label}: ${esc(key === 'min' || key === 'max' ? money(filters[key]) : filters[key])} ${icon.close}</button>`
@@ -240,13 +255,13 @@ function detailPage() {
   const id = path.split('/')[2]?.toUpperCase();
   const watch = catalog.watches.find(item => item.id === id);
   if (!watch) {
-    app.innerHTML = header('Watches') + `<main class="wrap empty-state page-empty"><span class="empty-symbol">✧</span><h1>That piece isn't here.</h1><p>This Watch ID may no longer be listed.</p><a class="button button-primary" href="/watches/">EXPLORE WATCHES ${icon.arrow}</a></main>` + footer();
+    app.innerHTML = header('Collection') + `<main class="wrap empty-state page-empty"><span class="empty-symbol">✧</span><h1>That piece isn't here.</h1><p>This Watch ID may no longer be listed.</p><a class="button button-primary" href="/watches/">EXPLORE WATCHES ${icon.arrow}</a></main>` + footer();
     return;
   }
   const specs = [['Watch ID', watch.id], ['Size', watch.size], ['Category', watch.category], ['Dial color', watch.dialColor], ['Case material', watch.caseMaterial], ['Strap material', watch.strapMaterial], ['Movement', watch.movement]].filter(([, value]) => value);
   const related = catalog.watches.filter(item => item.brandSlug === watch.brandSlug && item.id !== watch.id).slice(0, 4);
   const saved = favorites.has(watch.id);
-  app.innerHTML = header('Watches') + `<main class="detail-main"><div class="wrap">
+  app.innerHTML = header('Collection') + `<main class="detail-main"><div class="wrap">
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/watches/">COLLECTION</a><span>/</span><a href="/watches/${esc(watch.brandSlug)}/">${esc(watch.brand)}</a><span>/</span><span>${esc(watch.id)}</span></nav>
     <div class="detail-heading"><div><p class="eyebrow">${esc(watch.brand)} <span>·</span> ${esc(watch.id)}</p><h1>${esc(watch.model)}</h1></div>
       <div class="detail-price"><strong>${money(watch.price)}</strong><span class="stock-pill ${watch.stock === 0 ? 'unavailable' : ''}"><i></i>${stock(watch)}</span></div>
@@ -456,7 +471,11 @@ async function handleInquiry(button, watches) {
   if (!watches.length) return toast('Select at least one watch first.');
   if (await copyText(inquiry(watches))) {
     button.dataset.copied = 'yes';
-    button.innerHTML = `MESSAGE COPIED · OPEN MESSENGER ${icon.arrow}`;
+    if (button.classList.contains('card-inquire')) {
+      button.classList.add('is-copied');
+      button.setAttribute('aria-label', 'Open Messenger to send inquiry');
+      button.title = 'Open Messenger';
+    } else button.innerHTML = `MESSAGE COPIED · OPEN MESSENGER ${icon.arrow}`;
     toast('Message copied. Open Messenger and paste it.');
   } else toast('Could not copy the message. Please check clipboard permission.');
 }
@@ -484,6 +503,14 @@ function closeFilters() {
 }
 
 document.addEventListener('click', async event => {
+  const filterChoice = event.target.closest('[data-filter-choice]');
+  if (filterChoice) {
+    const key = filterChoice.dataset.filterChoice;
+    filters[key] = filters[key] === filterChoice.dataset.value ? '' : filterChoice.dataset.value;
+    shown = 24;
+    renderResults();
+    return;
+  }
   const searchTrigger = event.target.closest('[data-open-search]');
   if (searchTrigger) { openSearch(searchTrigger); return; }
   if (event.target.matches('.utility-backdrop') || event.target.closest('[data-close-overlay]')) { closeOverlay(); return; }
@@ -538,7 +565,7 @@ document.addEventListener('click', async event => {
     return;
   }
   if (event.target.closest('[data-clear]')) {
-    filters = { query: '', brand: '', size: '', dial: '', movement: '', category: '', availability: '', min: '', max: '', sort: 'newest' };
+    filters = { query: '', brand: '', size: '', dial: '', movement: '', category: '', strap: '', availability: '', min: '', max: '', sort: 'newest' };
     shown = 24;
     catalogPage();
     return;
@@ -547,8 +574,15 @@ document.addEventListener('click', async event => {
   if (removeFilter) {
     const key = removeFilter.dataset.removeFilter;
     filters[key] = '';
-    const control = key === 'query' ? document.getElementById('catalog-search') : document.querySelector(`[data-filter="${key}"]`);
+    const control = document.querySelector(`[data-filter="${key}"]`);
     if (control) control.value = '';
+    if (key === 'max') {
+      const slider = document.querySelector('[data-price-range]');
+      if (slider) {
+        slider.value = slider.max;
+        document.getElementById('price-max-label').textContent = money(slider.max) + '+';
+      }
+    }
     shown = 24;
     renderResults();
     return;

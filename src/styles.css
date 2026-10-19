@@ -528,6 +528,7 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .quick-info h2 { font-size: 47px; }
 }
 @media (max-width: 480px) {
+  .header-actions .saved-link { display: none; }
   .hero h1 { font-size: clamp(61px, 15vw, 78px); }
   .hero-buttons { flex-direction: column; }
   .hero-buttons { align-items: flex-start; }
@@ -816,4 +817,201 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .watch-grid.list-view .card-body h3 { font-size: 16px; }
   .watch-grid.list-view .card-spec { display: none; }
   .watch-grid.list-view .card-view { display: none; }
+}
+
+/* Watch Collection South storefront */
+.site-header { background: #080807; border-bottom-color: #b9934e55; }
+.header-inner { height: 76px; }
+.brand-lockup { gap: 10px; }
+.brand-lockup > img { width: 52px; height: 52px; }
+.brand-lockup strong { font-family: var(--display); font-size: 10px; letter-spacing: .14em; }
+.brand-lockup em { margin-top: 5px; font-size: 17px; letter-spacing: .32em; }
+.desktop-nav { gap: clamp(17px, 2vw, 31px); }
+.desktop-nav a { padding: 28px 0; color: #eee6d8; font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.desktop-nav a::after { bottom: 18px; height: 2px; }
+.header-actions { gap: 9px; margin-left: auto; }
+.header-search { width: clamp(150px, 15vw, 220px); height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border: 1px solid var(--gold-muted); border-radius: 999px; background: transparent; color: #f0e7d8; text-align: left; font: 11px var(--sans); }
+.header-search:hover { background: #d4af7016; border-color: var(--gold-light); }
+.header-search svg { width: 16px; height: 16px; color: var(--gold-light); }
+.header-actions .icon-link { width: 36px; height: 36px; }
+.header-actions .saved-link { color: var(--gold-light); }
+.header-actions .saved-count { top: -3px; right: -4px; min-width: 17px; min-height: 17px; display: grid; place-items: center; border-radius: 50%; background: var(--gold); color: #171009; font-size: 10px; }
+.header-actions .saved-count:empty { display: none; }
+.hero { min-height: 620px; position: relative; background: #080706 url('/hero-watch.png') center center / cover no-repeat; }
+.hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #050504ea 0%, #070605bd 29%, #0907053b 55%, #05040318 100%); pointer-events: none; }
+.hero-layout { position: relative; z-index: 1; display: flex; align-items: center; min-height: 580px; padding-block: 72px 84px; }
+.hero-copy { max-width: 540px; }
+.hero-copy > .eyebrow { margin-bottom: 20px; color: var(--gold); font-size: 11px; letter-spacing: .56em; }
+.hero h1 { margin-bottom: 18px; font: 500 clamp(66px, 6.5vw, 112px)/.87 var(--serif); letter-spacing: -.025em; }
+.hero-description { max-width: 410px; margin-bottom: 24px; color: #e1d9cc; font-size: 16px; line-height: 1.5; }
+.hero-buttons .button { min-width: 270px; min-height: 55px; justify-content: space-between; border-radius: 5px; background: linear-gradient(#f2d595, #d5a65f); font-size: 11px; color: #171008; }
+.hero-buttons .button:hover { background: #f3dda8; color: #171008; }
+.hero-promises { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 35px; }
+.hero-promises > span { display: flex; align-items: center; gap: 9px; color: #e7bf6b; font: 25px var(--serif); }
+.hero-promises small { color: #f5ede0; font: 700 9px/1.35 var(--sans); letter-spacing: .1em; }
+.hero-art { position: absolute; right: 0; top: 50%; display: block; width: min(25vw, 300px); min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; transform: translateY(-50%); }
+.hero-art::before, .hero-art-caption { display: none; }
+.hero-mark { width: 100%; aspect-ratio: 1; border: 2px solid #d4af7080; box-shadow: 0 12px 45px #000b; }
+.hero-bottom { display: none; }
+.home-brands, .home-featured { background: #0c0b0a; }
+.home-featured .watch-card:first-child { grid-column: auto; grid-row: auto; display: block; }
+.home-featured .watch-card:first-child .card-photo { min-height: 0; height: 300px; }
+.home-featured .watch-card:first-child .card-body { padding: 15px; }
+.home-featured .watch-card:first-child h3 { font: 400 17px/1.25 var(--display); }
+.home-featured .watch-card:first-child .card-bottom strong { font-size: 17px; }
+.home-featured .watch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.home-featured .collection-tile { min-height: 300px; }
+.collection-banner { position: relative; min-height: 180px; display: grid; place-items: center; overflow: hidden; background: #0c0805 url('/hero-watch.png') center 44% / cover no-repeat; text-align: center; }
+.collection-banner::before { content: ''; position: absolute; inset: 0; background: #050403aa; }
+.collection-banner .wrap { position: relative; z-index: 1; padding: 30px 0; }
+.collection-banner .eyebrow { margin-bottom: 4px; color: #d4af70; font-size: 9px; letter-spacing: .27em; }
+.collection-banner h1 { margin: 0; color: #fff8ed; font: 500 clamp(38px, 4.5vw, 68px)/1 var(--serif); letter-spacing: .055em; }
+.collection-banner p:last-child { margin: 8px 0 0; color: #e5ded2; font-size: 13px; }
+.catalog-section { padding: 18px 0 100px; background: #0a0a09; }
+.catalog-section .wrap { width: min(1540px, calc(100% - 72px)); }
+.catalog-layout { display: grid; grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 22px; }
+.filter-panel, .filter-panel.open { position: sticky; top: 94px; display: block; max-height: calc(100dvh - 112px); overflow-y: auto; margin: 0; padding: 17px 17px 7px; border: 1px solid #a3845638; border-radius: 10px; background: #111110; scrollbar-width: thin; }
+.filter-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0; padding: 0 0 13px; border-bottom: 1px solid var(--line); }
+.filter-heading h2 { margin: 0; color: #fff8ed; font: 700 12px var(--sans); letter-spacing: .06em; }
+.filter-heading > button:not(.filter-close) { width: auto; height: auto; padding: 0; border: 0; background: none; color: var(--gold-light); font: 11px var(--sans); text-decoration: underline; white-space: nowrap; }
+.filter-heading .filter-close { display: none; }
+.filter-section { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.filter-section:last-child { border-bottom: 0; }
+.filter-section summary { display: flex; justify-content: space-between; align-items: center; list-style: none; color: #f4eee5; font: 600 12px var(--sans); cursor: pointer; }
+.filter-section summary::-webkit-details-marker { display: none; }
+.filter-section summary::after { content: '⌄'; color: var(--text-muted); font-size: 15px; transform: rotate(180deg); }
+.filter-section:not([open]) summary::after { transform: none; }
+.filter-choices { display: grid; gap: 7px; margin-top: 14px; }
+.filter-choice { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 23px; padding: 0; border: 0; background: transparent; color: #d9d3c8; text-align: left; font: 11px var(--sans); }
+.filter-choice:hover, .filter-choice.selected { color: var(--gold-light); }
+.choice-box { width: 13px; height: 13px; flex: none; border: 1px solid #8e887d; border-radius: 3px; }
+.filter-choice.selected .choice-box { border-color: var(--gold); background: var(--gold); box-shadow: inset 0 0 0 3px #16120b; }
+.price-range { padding-top: 17px; }
+.price-range input[type="range"] { width: 100%; accent-color: #e8c278; cursor: pointer; }
+.price-range > div { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; color: #e7e0d4; font-size: 10px; }
+.price-min { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #aaa298; font-size: 10px; }
+.price-min input { width: 100%; min-width: 0; height: 30px; padding: 0 8px; border: 1px solid var(--line); border-radius: 5px; background: #0d0d0c; color: #f4eee5; font-size: 11px; }
+.dial-swatches { display: flex; flex-wrap: wrap; gap: 7px; padding-top: 15px; }
+.dial-swatch { width: 25px; height: 25px; display: grid; place-items: center; padding: 3px; border: 1px solid #b9aa8e; border-radius: 50%; background: transparent; }
+.dial-swatch.selected { border: 2px solid var(--gold-light); }
+.dial-swatch span { width: 100%; height: 100%; border-radius: 50%; }
+.swatch-name { display: block; margin-top: 8px; color: var(--text-muted); font-size: 10px; }
+.filter-more { display: grid; gap: 13px; margin-top: 15px; }
+.filter-group select { height: 35px; border-radius: 5px; }
+.catalog-content { min-width: 0; }
+.catalog-toolbar { min-height: 35px; align-items: center; gap: 10px; margin: 0 0 18px; }
+.toolbar-count { margin-right: auto; color: #eee7db; font-size: 12px; }
+.sort-box { width: 210px; min-width: 0; height: 35px; padding: 0 10px; border-radius: 6px; background: #111110; }
+.sort-box span { color: #e1d6c7; font-size: 10px; letter-spacing: 0; }
+.sort-box select { font-size: 11px; }
+.view-switch { padding: 2px; border-radius: 7px; }
+.view-switch button { width: 31px; height: 29px; border-radius: 5px; }
+.view-switch svg { width: 15px; height: 15px; }
+.filter-trigger { display: none; }
+.active-filters:not(:empty) { margin: 0 0 16px; }
+.catalog-content .watch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.watch-card { border-color: #b8a07a50; border-radius: 11px; background: #10100f; }
+.watch-card:hover { border-color: var(--gold-muted); }
+.card-photo, .catalog-content .card-photo { height: 245px; background: #1a1714; }
+.card-photo > a > img { padding: 0; object-fit: cover; }
+.card-body, .home-featured .watch-card:first-child .card-body { padding: 13px; }
+.card-brand { margin-bottom: 5px; color: #bda477; font-size: 9px; letter-spacing: .05em; }
+.card-body h3 { min-height: 0; color: #f4eee6; font: 400 15px/1.25 var(--display); }
+.card-spec { margin: 6px 0 0; font-size: 10px; }
+.card-bottom { flex-direction: row; justify-content: space-between; align-items: center; padding-top: 10px; }
+.card-bottom > div { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.card-bottom strong { color: #eac475; font: 400 17px var(--display); }
+.card-bottom span { font-size: 9px; text-align: left; }
+.card-inquire { width: 33px; height: 33px; flex: none; display: grid; place-items: center; border: 1px solid var(--gold-muted); border-radius: 6px; background: #12100c; color: #e9c47e; }
+.card-inquire:hover { background: var(--gold); color: #181108; }
+.card-inquire.is-copied { background: var(--gold); color: #181108; }
+.card-inquire svg { width: 16px; height: 16px; }
+.card-view { left: 10px; right: auto; bottom: 10px; width: auto; gap: 8px; padding: 8px 10px; border: 1px solid #d4af7080; opacity: 0; transform: translateY(9px); }
+.watch-card:hover .card-view, .card-view:focus-visible { opacity: 1; transform: none; }
+@media (hover: none) { .card-view { opacity: 1; transform: none; } }
+.compare-add { margin-top: 9px; padding: 5px 9px; font-size: 9px; }
+.card-view { font-size: 9px; }
+:root[data-theme="light"] .site-header { background: #fffdfa; }
+:root[data-theme="light"] .desktop-nav a { color: #3b2b1c; }
+:root[data-theme="light"] .header-search { color: #352618; }
+:root[data-theme="light"] .collection-banner p:last-child { color: #f1e9dc; }
+:root[data-theme="light"] .catalog-section { background: #f8f5ef; }
+:root[data-theme="light"] .filter-panel { background: #fffdfa; }
+:root[data-theme="light"] .filter-heading h2, :root[data-theme="light"] .filter-section summary,
+:root[data-theme="light"] .toolbar-count, :root[data-theme="light"] .filter-choice { color: #33271b; }
+:root[data-theme="light"] .price-range > div { color: #4d3c29; }
+:root[data-theme="light"] .price-min input, :root[data-theme="light"] .sort-box { background: #fffdfa; color: #33271b; }
+:root[data-theme="light"] .card-body h3 { color: #2d241b; }
+:root[data-theme="light"] .watch-card { background: #fffdfa; }
+:root[data-theme="light"] .card-inquire { background: #fffdfa; color: #80551e; }
+@media (max-width: 1280px) {
+  .catalog-content .watch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero-art { right: 1%; width: min(22vw, 260px); }
+}
+@media (max-width: 1050px) {
+  .desktop-nav { gap: 14px; }
+  .header-search { width: 155px; }
+  .home-featured .watch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 940px) {
+  .catalog-layout { grid-template-columns: 1fr; }
+  .filter-panel, .filter-panel.open { display: none; }
+  .filter-panel.open { position: fixed; z-index: 81; inset: 0 auto 0 0; display: block; width: min(365px, 90vw); max-height: 100dvh; overflow-y: auto; padding: 22px; border: 0; border-right: 1px solid var(--line-strong); border-radius: 0 16px 16px 0; box-shadow: var(--shadow); }
+  .filter-heading .filter-close { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 8px; }
+  .filter-trigger { display: inline-flex; min-height: 36px; padding: 0 12px; border-radius: 7px; }
+  .catalog-content .watch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero-mark { display: none; }
+}
+@media (max-width: 760px) {
+  .site-header { top: 0; }
+  .header-inner { height: 68px; }
+  .header-search { width: 36px; height: 36px; justify-content: center; padding: 0; }
+  .header-search span { display: none; }
+  .hero { min-height: 620px; background-position: 64% center; }
+  .hero::before { background: linear-gradient(90deg, #050504e8, #050504ae 60%, #0505044a), linear-gradient(0deg, #050504a8, transparent 60%); }
+  .hero-layout { align-items: end; min-height: 620px; padding-block: 60px 65px; }
+  .hero-copy { max-width: 470px; }
+  .hero h1 { font-size: clamp(62px, 10vw, 88px); }
+  .hero-promises { gap: 16px; }
+  .hero-promises > span { font-size: 20px; }
+  .hero-promises small { font-size: 8px; }
+  .home-featured .watch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-featured .watch-card:first-child { grid-column: auto; }
+  .home-featured .watch-card:first-child .card-photo { height: 265px; }
+  .catalog-section .wrap { width: min(100% - 36px, 620px); }
+  .catalog-content .watch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .catalog-content .card-photo { height: 230px; }
+  .catalog-toolbar { flex-wrap: wrap; }
+  .toolbar-count { flex: 1 0 100%; }
+  .sort-box { flex: 1; order: 0; }
+  .view-switch { order: 1; }
+  .filter-trigger { order: 2; }
+  .bottom-nav { z-index: 47; }
+}
+@media (max-width: 480px) {
+  .hero { min-height: 590px; background-position: 64% center; }
+  .hero-layout { min-height: 590px; padding-block: 55px 44px; }
+  .hero h1 { font-size: clamp(52px, 13vw, 69px); }
+  .hero-copy > .eyebrow { font-size: 9px; letter-spacing: .35em; }
+  .hero-description { font-size: 14px; }
+  .hero-promises { justify-content: space-between; gap: 8px; }
+  .hero-promises > span { gap: 4px; font-size: 17px; }
+  .hero-promises small { font-size: 7px; letter-spacing: 0; }
+  .collection-banner { min-height: 150px; }
+  .collection-banner h1 { font-size: 39px; }
+  .catalog-content .card-photo { height: 190px; }
+  .card-body, .home-featured .watch-card:first-child .card-body { padding: 11px; }
+  .card-body h3, .home-featured .watch-card:first-child h3 { min-height: 37px; font-size: 13px; }
+  .card-brand { font-size: 8px; }
+  .card-spec { display: none; }
+  .card-bottom strong { font-size: 14px; }
+  .card-bottom span { font-size: 8px; }
+  .card-inquire { width: 29px; height: 29px; }
+  .sort-box { min-width: 0; }
+}
+@media (max-width: 360px) {
+  .header-search { display: none; }
+  .hero h1 { font-size: 47px; letter-spacing: -.05em; }
+  .catalog-content .watch-grid, .home-featured .watch-grid { grid-template-columns: 1fr; }
+  .catalog-content .card-photo, .home-featured .watch-card:first-child .card-photo { height: 280px; }
 }

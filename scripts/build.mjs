@@ -8,6 +8,7 @@ import { extractWorkbookImages } from './xlsx-images.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
 const cache = join(root, '.cache', 'images');
+const embeddedCache = join(root, '.cache', 'embedded');
 const base = `https://docs.google.com/spreadsheets/d/${SHEET_ID}`;
 const origin = 'https://lux-co-south.web.app';
 
@@ -50,17 +51,28 @@ const brandData = await pool(TABS, 4, async ([tab, gid, label]) => {
 });
 
 const watches = brandData.flatMap(brand => brand.watches);
-let workbookImages = new Map();
 const missingLinks = watches.filter(watch => !watch.imageSource);
-if (missingLinks.length) {
+mkdirSync(embeddedCache, { recursive: true });
+const embeddedFiles = readdirSync(embeddedCache);
+const embeddedKey = id => createHash('sha256').update(id).digest('hex').slice(0, 20);
+const workbookImages = new Map();
+for (const watch of watches) {
+  const file = embeddedFiles.find(name => name.startsWith(embeddedKey(watch.id) + '.'));
+  if (file) workbookImages.set(watch.id, { bytes: readFileSync(join(embeddedCache, file)), extension: file.split('.').pop() });
+}
+if (missingLinks.length && process.env.LUX_SKIP_WORKBOOK_EXPORT !== '1') {
   try {
     console.log(`Reading workbook photos for ${missingLinks.length} watches without public page links…`);
     const response = await get(`${base}/export?format=xlsx`, 'workbook images', 300000);
     const bytes = Buffer.from(await response.arrayBuffer());
     console.log(`Workbook export: ${(bytes.length / 1_000_000).toFixed(1)} MB.`);
     if (bytes.length > 750_000_000 || bytes.readUInt32LE(0) !== 0x04034b50) throw new Error('invalid or oversized workbook');
-    workbookImages = extractWorkbookImages(bytes, new Map(brandData.map(brand => [brand.tab, brand.rows])));
-    console.log(`Found ${workbookImages.size} embedded workbook photos.`);
+    const freshImages = extractWorkbookImages(bytes, new Map(brandData.map(brand => [brand.tab, brand.rows])));
+    for (const [id, image] of freshImages) {
+      workbookImages.set(id, image);
+      writeFileSync(join(embeddedCache, `${embeddedKey(id)}.${image.extension}`), image.bytes);
+    }
+    console.log(`Found ${freshImages.size} embedded workbook photos.`);
   } catch (error) { console.warn(`Workbook image warning: ${error.message}`); }
 }
 const ids = new Set();
@@ -106,8 +118,40 @@ await pool(imageWatches, 8, async watch => {
     copyFileSync(join(cache, `${key}.${ext}`), join(dist, 'images', file));
     watch.image = `/images/${file}`;
     saved++;
-  } catch (error) { console.warn(`Image unavailable for ${watch.id}: ${error.message}`); missed++; }
+  } catch (error) {
+    const fallback = workbookImages.get(watch.id);
+    if (fallback) {
+      const file = `${watch.id}-${createHash('sha256').update(fallback.bytes).digest('hex').slice(0, 10)}.${fallback.extension}`;
+      writeFileSync(join(dist, 'images', file), fallback.bytes);
+      watch.image = `/images/${file}`;
+      saved++;
+      console.warn(`Used cached photo for ${watch.id}: ${error.message}`);
+    } else { console.warn(`Image unavailable for ${watch.id}: ${error.message}`); missed++; }
+  }
 });
+
+const withoutPhotos = watches.filter(watch => !watch.image);
+if (withoutPhotos.length) {
+  try {
+    const previousCatalog = await (await get(`${origin}/api/catalog.json`, 'previous catalog')).json();
+    const previousById = new Map(previousCatalog.watches.map(watch => [watch.id, watch]));
+    let recovered = 0;
+    await pool(withoutPhotos, 8, async watch => {
+      const previousImage = previousById.get(watch.id)?.image;
+      if (!/^\/images\/[A-Za-z0-9_.-]+\.(jpg|jpeg|png|webp)$/.test(previousImage || '')) return;
+      try {
+        const bytes = Buffer.from(await (await get(origin + previousImage, `${watch.id} previous photo`, 30000)).arrayBuffer());
+        if (bytes.length < 100 || bytes.length > 8_000_000) throw new Error('invalid image size');
+        const file = previousImage.split('/').pop();
+        writeFileSync(join(dist, 'images', file), bytes);
+        watch.image = previousImage;
+        writeFileSync(join(embeddedCache, `${embeddedKey(watch.id)}.${file.split('.').pop()}`), bytes);
+        recovered++;
+      } catch (error) { console.warn(`Previous photo unavailable for ${watch.id}: ${error.message}`); }
+    });
+    if (recovered) console.log(`Recovered ${recovered} photos from the live catalog.`);
+  } catch (error) { console.warn(`Previous catalog warning: ${error.message}`); }
+}
 
 const brands = brandData.map(({ gid, label, watches: rows }) => ({ name: label, slug: slug(label), gid: String(gid), count: rows.length }));
 const catalog = {
@@ -115,7 +159,7 @@ const catalog = {
   watches: watches.map(({ imageSource, ...watch }) => watch), brands
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
-for (const file of ['app.js', 'styles.css', 'logo.jpg', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
+for (const file of ['app.js', 'styles.css', 'logo.jpg', 'hero-watch.png', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
 const assetVersion = createHash('sha256')
   .update(readFileSync(join(root, 'src', 'app.js')))
   .update(readFileSync(join(root, 'src', 'styles.css')))

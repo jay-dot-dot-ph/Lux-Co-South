@@ -21,7 +21,7 @@
       const savedTheme = localStorage.getItem('lux-theme');
       document.documentElement.dataset.theme = savedTheme === 'light' || savedTheme === 'dark'
         ? savedTheme
-        : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        : 'dark';
     } catch { document.documentElement.dataset.theme = 'dark'; }
   </script>
   <link rel="stylesheet" href="/styles.css">
