@@ -20,6 +20,7 @@ const brandLink = brand => `/watches/${encodeURIComponent(brand.slug)}/`;
 let catalog;
 let favorites = new Set();
 let selection = new Set();
+let quickViewReturnFocus = null;
 let shown = 24;
 let filters = {
   query: new URLSearchParams(location.search).get('q') || '',
@@ -35,8 +36,26 @@ const icon = {
   heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 4.6a5.5 5.5 0 0 0-7.8 0l-.6.6-.6-.6a5.5 5.5 0 0 0-7.8 7.8L12 21l8.4-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>',
   close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19"/></svg>',
   filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M7 12h10m-7 5h4"/><circle cx="8" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/></svg>',
-  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>'
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 15.7A8.6 8.6 0 0 1 8.3 3.6 8.6 8.6 0 1 0 20.4 15.7Z"/></svg>'
 };
+
+function themeButton() {
+  const light = document.documentElement.dataset.theme === 'light';
+  return `<button class="icon-link theme-toggle" type="button" data-theme-toggle aria-label="Switch to ${light ? 'dark' : 'light'} mode" title="Switch to ${light ? 'dark' : 'light'} mode">${light ? icon.moon : icon.sun}</button>`;
+}
+
+function setTheme(theme, persist = true) {
+  document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f8f5ef' : '#090807');
+  document.querySelectorAll('[data-theme-toggle]').forEach(button => {
+    button.innerHTML = theme === 'light' ? icon.moon : icon.sun;
+    button.setAttribute('aria-label', `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`);
+    button.title = `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`;
+  });
+  if (persist) try { localStorage.setItem('lux-theme', theme); } catch {}
+}
 
 function image(watch, { eager = false } = {}) {
   return watch?.image
@@ -56,6 +75,7 @@ function header(active = '') {
     <nav class="desktop-nav" aria-label="Main navigation">${nav}</nav>
     <div class="header-actions">
       <a class="icon-link" href="/watches/" aria-label="Search watches">${icon.search}</a>
+      ${themeButton()}
       <a class="icon-link saved-link" href="/favorites/" aria-label="Saved watches">${icon.heart}<span class="saved-count">${favorites.size || ''}</span></a>
       <button class="menu-button" type="button" data-menu aria-controls="mobile-menu" aria-expanded="false" aria-label="Open menu"><span></span><span></span></button>
     </div>
@@ -81,7 +101,7 @@ function card(watch) {
     <div class="card-photo"><a href="${link(watch)}" aria-label="View ${esc(name(watch))}">${image(watch)}</a>
       <button class="heart-button ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove' : 'Save'} ${esc(name(watch))} ${saved ? 'from' : 'to'} favorites" aria-pressed="${saved}">${icon.heart}</button>
       ${watch.stock === 0 ? '<span class="stock-badge">SOLD OUT</span>' : ''}
-      <span class="card-view">VIEW PIECE ${icon.arrow}</span>
+      <button class="card-view" type="button" data-quick-view="${esc(watch.id)}" aria-label="Quick view ${esc(name(watch))}">QUICK VIEW ${icon.arrow}</button>
     </div>
     <div class="card-body"><p class="card-brand">${esc(watch.brand)}</p><h3><a href="${link(watch)}">${esc(watch.model)}</a></h3>
       <p class="card-spec">${esc([watch.movement, watch.size].filter(Boolean).join(' · ') || watch.id)}</p>
@@ -99,17 +119,26 @@ function pageIntro(eyebrow, title, description, detail = '') {
 }
 
 function home() {
-  const preview = [...catalog.watches].filter(watch => watch.image).sort((a, b) => (b.dateAdded || '').localeCompare(a.dateAdded || '')).slice(0, 8);
+  const featureBrands = ['Cartier', 'Rolex', 'Audemars Piguet', 'Patek Philippe', 'Omega', 'TAG Heuer', 'Vacheron Constantin', 'Seiko'];
+  const preview = featureBrands.map(brand => catalog.watches.find(watch => watch.brand === brand && watch.image && watch.stock !== 0)).filter(Boolean);
+  for (const watch of catalog.watches) {
+    if (preview.length >= 8) break;
+    if (watch.image && !preview.some(item => item.id === watch.id)) preview.push(watch);
+  }
   const featuredBrands = [...catalog.brands].sort((a, b) => b.count - a.count).slice(0, 6);
   app.innerHTML = header('Discover') + `<main>
-    <section class="hero"><div class="hero-emblem" aria-hidden="true"><img src="/logo.jpg" alt=""></div>
-      <div class="wrap hero-center"><p class="eyebrow">WATCH COLLECTION SOUTH <span class="gold-star">✧</span> MANILA</p>
-        <h1>Time is <em>personal.</em></h1>
-        <p class="hero-description">A considered collection for every chapter. Find the piece that feels like yours, save the ones you love, and ask us about the details.</p>
-        <div class="hero-buttons"><a class="button button-primary" href="/watches/">EXPLORE THE COLLECTION ${icon.arrow}</a><a class="button button-outline" href="/brands/">DISCOVER BRANDS</a></div>
-        <div class="hero-proof"><span><strong>${catalog.watches.length.toLocaleString()}</strong> CURATED WATCHES</span><span><strong>${catalog.brands.length}</strong> BRANDS TO EXPLORE</span><span><strong>01</strong> PERSONAL SHORTLIST</span></div>
+    <section class="hero"><div class="wrap hero-layout">
+      <div class="hero-copy"><p class="eyebrow">WATCH COLLECTION SOUTH <span class="gold-star">✧</span> MANILA</p>
+        <h1>Time worth<br><em>keeping.</em></h1>
+        <p class="hero-description">A considered collection for the moments that stay with you. Discover the details, save what speaks to you, and find your next watch.</p>
+        <div class="hero-buttons"><a class="button button-primary" href="/watches/">EXPLORE THE COLLECTION ${icon.arrow}</a><a class="text-link" href="/brands/">DISCOVER THE BRANDS ${icon.arrow}</a></div>
+        <p class="hero-signature">CURATED IN MANILA <span></span> MADE FOR YOUR MOMENT</p>
       </div>
-      <div class="hero-bottom"><div class="wrap"><span>EST. IN MANILA · MADE FOR THE MOMENT</span><span>DISCOVER <span class="gold-star">✧</span> SAVE <span class="gold-star">✧</span> INQUIRE</span></div></div>
+      <div class="hero-art"><div class="hero-mark"><img src="/logo.jpg" alt="Watch Collection South"></div>
+        <div class="hero-art-caption"><span>01 / THE COLLECTION</span><span>WATCH COLLECTION SOUTH</span></div>
+      </div>
+    </div>
+      <div class="hero-bottom"><div class="wrap"><span>${catalog.watches.length.toLocaleString()} WATCHES <i></i> ${catalog.brands.length} BRANDS</span><span>DISCOVER <span class="gold-star">✧</span> SAVE <span class="gold-star">✧</span> INQUIRE</span><span>INSPECT BEFORE PAYING</span></div></div>
     </section>
     <section class="home-brands section-pad"><div class="wrap">${sectionHead('01', 'EXPLORE BY MAISON', 'Find a name that speaks to you.', '/brands/', 'All brands')}
       <div class="brand-feature-grid">${featuredBrands.map((brand, index) => `<a class="brand-feature" href="${brandLink(brand)}"><span class="brand-feature-top"><small>${String(index + 1).padStart(2, '0')}</small><span>${icon.arrow}</span></span><strong>${esc(brand.name)}</strong><span class="brand-feature-count">${brand.count} WATCHES</span></a>`).join('')}</div>
@@ -118,10 +147,8 @@ function home() {
       <div class="watch-grid">${preview.map(card).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>
     </div></section>
     <section class="home-story section-pad"><div class="wrap story-grid">
-      <div class="story-brand"><img src="/logo.jpg" alt="Watch Collection South" loading="lazy"></div>
-      <div class="story-copy"><p class="eyebrow">03 / THE EXPERIENCE</p><h2>Explore with<br><em>intention.</em></h2><p>Search by brand or detail, keep the pieces that catch your eye, then ask us about the watches you love. Your shortlist stays in this browser until you're ready.</p>
-        <div class="story-steps"><div><span>01</span><strong>Discover</strong><p>Browse and refine the entire collection.</p></div><div><span>02</span><strong>Consider</strong><p>Save a personal selection of favorites.</p></div><div><span>03</span><strong>Connect</strong><p>Send a prepared inquiry through Messenger.</p></div></div>
-      </div>
+      <div class="story-copy"><p class="eyebrow">03 / THE EXPERIENCE</p><h2>Explore with<br><em>intention.</em></h2><p>Search by brand or detail, keep the pieces that catch your eye, then ask us about the watches you love. Your shortlist stays in this browser until you're ready.</p></div>
+      <div class="story-steps"><div><span>01</span><strong>Discover</strong><p>Browse and refine the entire collection.</p></div><div><span>02</span><strong>Consider</strong><p>Save a personal selection of favorites.</p></div><div><span>03</span><strong>Connect</strong><p>Send a prepared inquiry through Messenger.</p></div></div>
     </div></section>
     <section class="visit-section" id="visit"><div class="wrap visit-grid">
       <div><p class="eyebrow">VISIT THE COLLECTION</p><h2>Experience it<br><em>in person.</em></h2><p>Find us at Forbes Commercial, Sampaloc, Manila. Ask about a Watch ID before visiting so we can confirm availability.</p>
@@ -155,7 +182,7 @@ function catalogPage() {
         <label class="sort-box"><span>SORT BY</span><select id="sort"><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="brand">Brand: A–Z</option></select>${icon.chevron}</label>
         <button class="filter-trigger" type="button" data-open-filters aria-controls="filter-panel" aria-expanded="false">${icon.filter} FILTERS</button>
       </div><aside class="filter-panel" id="filter-panel" aria-label="Catalog filters">${filterPanel()}</aside>
-      <div class="result-meta"><span id="result-count"></span><span>ALL PRICES IN PHILIPPINE PESOS</span></div><div id="results"></div></div>
+      <div class="result-meta"><span id="result-count"></span><span>ALL PRICES IN PHILIPPINE PESOS</span></div><div class="active-filters" id="active-filters" aria-label="Active filters"></div><div id="results"></div></div>
     </div></section>
   </main><button class="filter-overlay" type="button" data-close-filters aria-label="Close filters" hidden></button>` + footer();
   document.getElementById('sort').value = filters.sort;
@@ -186,6 +213,11 @@ function renderResults() {
   else if (filters.sort === 'brand') rows.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
   else rows.sort((a, b) => (b.dateAdded || '').localeCompare(a.dateAdded || ''));
   document.getElementById('result-count').textContent = `${rows.length.toLocaleString()} ${rows.length === 1 ? 'piece' : 'pieces'}`;
+  const filterNames = { query: 'Search', brand: 'Brand', size: 'Size', dial: 'Dial', movement: 'Movement', category: 'Category', availability: 'Stock', min: 'From', max: 'To' };
+  const active = Object.entries(filterNames).filter(([key]) => filters[key]);
+  document.getElementById('active-filters').innerHTML = active.map(([key, label]) =>
+    `<button type="button" class="filter-chip" data-remove-filter="${key}" aria-label="Remove ${label.toLowerCase()} filter">${label}: ${esc(key === 'min' || key === 'max' ? money(filters[key]) : filters[key])} ${icon.close}</button>`
+  ).join('');
   document.getElementById('results').innerHTML = rows.length
     ? `<div class="watch-grid">${rows.slice(0, shown).map(card).join('')}</div>${rows.length > shown ? `<div class="load-more"><span>SHOWING ${Math.min(shown, rows.length)} OF ${rows.length}</span><button class="button button-outline" type="button" data-more>VIEW MORE WATCHES ${icon.arrow}</button></div>` : ''}`
     : `<div class="empty-state"><span class="empty-symbol">✧</span><p class="eyebrow">NO MATCHES FOUND</p><h2>Nothing in this edit—yet.</h2><p>Try another search or start again with all watches.</p><button class="button button-outline" type="button" data-clear>RESET FILTERS ${icon.arrow}</button></div>`;
@@ -264,6 +296,43 @@ function contactPage() {
   </main>` + footer();
 }
 
+function openQuickView(id, trigger) {
+  const watch = catalog.watches.find(item => item.id === id);
+  if (!watch) return;
+  closeQuickView(false);
+  quickViewReturnFocus = trigger;
+  const saved = favorites.has(watch.id);
+  const modal = document.createElement('div');
+  modal.className = 'quick-view-backdrop';
+  modal.setAttribute('data-quick-close', '');
+  modal.innerHTML = `<section class="quick-view" role="dialog" aria-modal="true" aria-labelledby="quick-view-title">
+    <button class="quick-close" type="button" data-quick-close aria-label="Close quick view">${icon.close}</button>
+    <div class="quick-photo">${image(watch, { eager: true })}</div>
+    <div class="quick-info">
+      <p class="eyebrow">${esc(watch.brand)} · ${esc(watch.id)}</p>
+      <h2 id="quick-view-title">${esc(watch.model)}</h2>
+      <p class="quick-description">${esc(watch.description || 'Ask us for more details about this watch.')}</p>
+      <p class="quick-meta">${[watch.movement, watch.size, watch.dialColor].filter(Boolean).map(esc).join(' · ')}</p>
+      <div class="quick-price"><strong>${money(watch.price)}</strong><span>${stock(watch)}</span></div>
+      <div class="quick-actions"><button class="button button-primary" type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button>
+        <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
+      <a class="text-link" href="${link(watch)}">VIEW ALL DETAILS ${icon.arrow}</a>
+    </div>
+  </section>`;
+  document.body.appendChild(modal);
+  document.body.classList.add('modal-open');
+  modal.querySelector('.quick-close').focus();
+}
+
+function closeQuickView(restoreFocus = true) {
+  const modal = document.querySelector('.quick-view-backdrop');
+  if (!modal) return;
+  modal.remove();
+  document.body.classList.remove('modal-open');
+  if (restoreFocus && quickViewReturnFocus?.isConnected) quickViewReturnFocus.focus();
+  quickViewReturnFocus = null;
+}
+
 function toast(message) {
   let element = document.getElementById('toast');
   if (!element) {
@@ -335,6 +404,13 @@ function closeFilters() {
 }
 
 document.addEventListener('click', async event => {
+  if (event.target.closest('[data-theme-toggle]')) {
+    setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+    return;
+  }
+  if (event.target.matches('.quick-view-backdrop') || event.target.closest('.quick-close')) { closeQuickView(); return; }
+  const quick = event.target.closest('[data-quick-view]');
+  if (quick) { openQuickView(quick.dataset.quickView, quick); return; }
   const menu = event.target.closest('[data-menu]');
   if (menu) {
     const panel = document.getElementById('mobile-menu');
@@ -357,6 +433,16 @@ document.addEventListener('click', async event => {
     filters = { query: '', brand: '', size: '', dial: '', movement: '', category: '', availability: '', min: '', max: '', sort: 'newest' };
     shown = 24;
     catalogPage();
+    return;
+  }
+  const removeFilter = event.target.closest('[data-remove-filter]');
+  if (removeFilter) {
+    const key = removeFilter.dataset.removeFilter;
+    filters[key] = '';
+    const control = key === 'query' ? document.getElementById('catalog-search') : document.querySelector(`[data-filter="${key}"]`);
+    if (control) control.value = '';
+    shown = 24;
+    renderResults();
     return;
   }
   if (event.target.closest('[data-more]')) { shown += 24; renderResults(); return; }
@@ -390,7 +476,15 @@ document.addEventListener('change', event => {
   }
 });
 document.addEventListener('keydown', event => {
+  const modal = document.querySelector('.quick-view-backdrop');
+  if (modal && event.key === 'Tab') {
+    const controls = [...modal.querySelectorAll('button, a[href]')].filter(element => !element.disabled);
+    const first = controls[0], last = controls.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
   if (event.key === 'Escape') {
+    if (modal) { closeQuickView(); return; }
     closeFilters();
     const menu = document.getElementById('mobile-menu');
     if (menu && !menu.hidden) {
@@ -411,6 +505,7 @@ function render() {
   else app.innerHTML = header() + `<main class="wrap empty-state page-empty"><span class="empty-symbol">✧</span><h1>Page not found.</h1><p>Let's find a watch instead.</p><a class="button button-primary" href="/watches/">EXPLORE WATCHES ${icon.arrow}</a></main>` + footer();
 }
 
+setTheme(document.documentElement.dataset.theme || 'dark', false);
 fetch('/api/catalog.json')
   .then(response => { if (!response.ok) throw new Error(`Catalog HTTP ${response.status}`); return response.json(); })
   .then(data => { catalog = data; render(); })
