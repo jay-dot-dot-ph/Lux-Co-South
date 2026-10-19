@@ -116,7 +116,13 @@ const catalog = {
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
 for (const file of ['app.js', 'styles.css', 'logo.jpg', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
-const template = readFileSync(join(root, 'src', 'index.html'), 'utf8');
+const assetVersion = createHash('sha256')
+  .update(readFileSync(join(root, 'src', 'app.js')))
+  .update(readFileSync(join(root, 'src', 'styles.css')))
+  .digest('hex').slice(0, 12);
+const template = readFileSync(join(root, 'src', 'index.html'), 'utf8')
+  .replace('href="/styles.css"', `href="/styles.css?v=${assetVersion}"`)
+  .replace('src="/app.js"', `src="/app.js?v=${assetVersion}"`);
 const page = (path, title, description, image) => template
   .replaceAll('__TITLE__', title.replace(/[&<>"']/g, ''))
   .replaceAll('__DESCRIPTION__', description.replace(/[&<>"']/g, ''))

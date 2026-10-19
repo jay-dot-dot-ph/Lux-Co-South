@@ -99,28 +99,23 @@ function pageIntro(eyebrow, title, description, detail = '') {
 }
 
 function home() {
-  const visual = catalog.watches.find(watch => watch.image && watch.stock !== 0) || catalog.watches[0];
   const preview = [...catalog.watches].filter(watch => watch.image).sort((a, b) => (b.dateAdded || '').localeCompare(a.dateAdded || '')).slice(0, 8);
   const featuredBrands = [...catalog.brands].sort((a, b) => b.count - a.count).slice(0, 6);
   app.innerHTML = header('Discover') + `<main>
-    <section class="hero"><div class="wrap hero-grid">
-      <div class="hero-copy"><p class="eyebrow"><span class="eyebrow-line"></span> THE PRIVATE EDIT</p>
-        <h1>Time is<br><em>personal.</em></h1>
-        <p class="hero-description">Discover the piece that feels unmistakably yours. Explore our curated watch collection, save your favorites, and inquire with confidence.</p>
+    <section class="hero"><div class="hero-emblem" aria-hidden="true"><img src="/logo.jpg" alt=""></div>
+      <div class="wrap hero-center"><p class="eyebrow">WATCH COLLECTION SOUTH <span class="gold-star">✧</span> MANILA</p>
+        <h1>Time is <em>personal.</em></h1>
+        <p class="hero-description">A considered collection for every chapter. Find the piece that feels like yours, save the ones you love, and ask us about the details.</p>
         <div class="hero-buttons"><a class="button button-primary" href="/watches/">EXPLORE THE COLLECTION ${icon.arrow}</a><a class="button button-outline" href="/brands/">DISCOVER BRANDS</a></div>
-        <div class="hero-proof"><span><strong>${catalog.watches.length.toLocaleString()}</strong> CURATED WATCHES</span><span><strong>${catalog.brands.length}</strong> BRANDS TO EXPLORE</span><span class="hero-proof-line"></span><span>MANILA, PHILIPPINES</span></div>
+        <div class="hero-proof"><span><strong>${catalog.watches.length.toLocaleString()}</strong> CURATED WATCHES</span><span><strong>${catalog.brands.length}</strong> BRANDS TO EXPLORE</span><span><strong>01</strong> PERSONAL SHORTLIST</span></div>
       </div>
-      <a class="hero-visual" href="${link(visual)}" aria-label="Explore ${esc(name(visual))}">
-        <div class="hero-visual-frame">${image(visual, { eager: true })}</div>
-        <span class="hero-visual-index">01 / FEATURED PIECE</span>
-        <span class="hero-visual-caption"><small>FROM THE COLLECTION</small><strong>${esc(name(visual))}</strong><span>Discover this watch ${icon.arrow}</span></span>
-      </a>
-    </div><div class="hero-bottom"><div class="wrap"><span>AN EDIT OF TIMELESS PIECES</span><span>DISCOVER <span class="gold-star">✧</span> SAVE <span class="gold-star">✧</span> INQUIRE</span></div></div></section>
+      <div class="hero-bottom"><div class="wrap"><span>EST. IN MANILA · MADE FOR THE MOMENT</span><span>DISCOVER <span class="gold-star">✧</span> SAVE <span class="gold-star">✧</span> INQUIRE</span></div></div>
+    </section>
     <section class="home-brands section-pad"><div class="wrap">${sectionHead('01', 'EXPLORE BY MAISON', 'Find a name that speaks to you.', '/brands/', 'All brands')}
       <div class="brand-feature-grid">${featuredBrands.map((brand, index) => `<a class="brand-feature" href="${brandLink(brand)}"><span class="brand-feature-top"><small>${String(index + 1).padStart(2, '0')}</small><span>${icon.arrow}</span></span><strong>${esc(brand.name)}</strong><span class="brand-feature-count">${brand.count} WATCHES</span></a>`).join('')}</div>
     </div></section>
     <section class="home-featured section-pad"><div class="wrap">${sectionHead('02', 'CURATED SELECTION', 'Pieces worth a closer look.', '/watches/', 'View collection')}
-      <div class="watch-grid">${preview.map(card).join('')}</div>
+      <div class="watch-grid">${preview.map(card).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>
     </div></section>
     <section class="home-story section-pad"><div class="wrap story-grid">
       <div class="story-brand"><img src="/logo.jpg" alt="Watch Collection South" loading="lazy"></div>
@@ -155,12 +150,12 @@ function catalogPage() {
   app.innerHTML = header('Watches') + `<main>
     ${pageIntro(brand ? 'THE MAISON EDIT' : 'THE COLLECTION', brand ? esc(brand.name) : 'Explore the collection.', brand ? `Discover every ${esc(brand.name)} piece in our selection.` : 'Find a watch for your next chapter. Refine by the details that matter.', brand ? `${brand.count} WATCHES` : `${catalog.watches.length} WATCHES · ${catalog.brands.length} BRANDS`)}
     <section class="catalog-section"><div class="wrap catalog-layout">
-      <aside class="filter-panel" id="filter-panel" aria-label="Catalog filters">${filterPanel()}</aside>
       <div class="catalog-content"><div class="catalog-toolbar">
         <label class="search-box">${icon.search}<span class="sr-only">Search watches</span><input id="catalog-search" type="search" placeholder="Search brand, model or Watch ID" value="${esc(filters.query)}"></label>
         <label class="sort-box"><span>SORT BY</span><select id="sort"><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="brand">Brand: A–Z</option></select>${icon.chevron}</label>
         <button class="filter-trigger" type="button" data-open-filters aria-controls="filter-panel" aria-expanded="false">${icon.filter} FILTERS</button>
-      </div><div class="result-meta"><span id="result-count"></span><span>ALL PRICES IN PHILIPPINE PESOS</span></div><div id="results"></div></div>
+      </div><aside class="filter-panel" id="filter-panel" aria-label="Catalog filters">${filterPanel()}</aside>
+      <div class="result-meta"><span id="result-count"></span><span>ALL PRICES IN PHILIPPINE PESOS</span></div><div id="results"></div></div>
     </div></section>
   </main><button class="filter-overlay" type="button" data-close-filters aria-label="Close filters" hidden></button>` + footer();
   document.getElementById('sort').value = filters.sort;
@@ -216,9 +211,11 @@ function detailPage() {
   const saved = favorites.has(watch.id);
   app.innerHTML = header('Watches') + `<main class="detail-main"><div class="wrap">
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/watches/">COLLECTION</a><span>/</span><a href="/watches/${esc(watch.brandSlug)}/">${esc(watch.brand)}</a><span>/</span><span>${esc(watch.id)}</span></nav>
-    <div class="detail-grid"><div class="detail-media"><div class="detail-photo">${image(watch, { eager: true })}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
-      <div class="detail-info"><p class="eyebrow">${esc(watch.brand)} <span>·</span> ${esc(watch.id)}</p><h1>${esc(watch.model)}</h1>
-        <div class="detail-price"><strong>${money(watch.price)}</strong><span class="stock-pill ${watch.stock === 0 ? 'unavailable' : ''}"><i></i>${stock(watch)}</span></div>
+    <div class="detail-heading"><div><p class="eyebrow">${esc(watch.brand)} <span>·</span> ${esc(watch.id)}</p><h1>${esc(watch.model)}</h1></div>
+      <div class="detail-price"><strong>${money(watch.price)}</strong><span class="stock-pill ${watch.stock === 0 ? 'unavailable' : ''}"><i></i>${stock(watch)}</span></div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-info"><p class="eyebrow">ABOUT THIS PIECE</p>
         <p class="detail-description">${esc(watch.description || 'Ask us for more details about this watch.')}</p>
         <div class="detail-actions"><button class="button button-primary" type="button" data-inquire="${esc(watch.id)}">INQUIRE ABOUT THIS PIECE ${icon.arrow}</button>
           <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
@@ -226,6 +223,7 @@ function detailPage() {
         <button class="copy-link" type="button" data-share="${esc(watch.id)}">COPY A LINK TO THIS WATCH ${icon.arrow}</button>
         <div class="detail-assurance"><span>01 / SAVE TO YOUR SHORTLIST</span><span>02 / ASK US ABOUT AVAILABILITY</span><span>03 / INSPECT BEFORE PAYING</span></div>
       </div>
+      <div class="detail-media"><div class="detail-photo">${image(watch, { eager: true })}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
     </div>
     <section class="spec-section">${sectionHead('01', 'THE DETAILS', 'The finer points.')}
       <dl>${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl></section>
@@ -253,8 +251,8 @@ function favoritesPage() {
 
 function contactPage() {
   app.innerHTML = header('Contact') + `<main>${pageIntro('BEGIN A CONVERSATION', "Let's talk watches.", 'Ask about a piece, request more details, or plan a visit.', 'MANILA · PHILIPPINES')}
-    <section class="contact-page section-pad"><div class="wrap contact-grid">
-      <div class="contact-intro"><img src="/logo.jpg" alt="Watch Collection South" loading="lazy"><div><p class="eyebrow">WE'RE HERE TO HELP</p><h2>A more personal way to find your watch.</h2><p>Each watch page prepares an inquiry with its Watch ID, price and link. You can also save several pieces and ask about them together.</p><a class="text-link" href="/watches/">Browse the collection ${icon.arrow}</a></div></div>
+    <section class="contact-page section-pad"><div class="wrap">
+      <div class="contact-lead"><div><p class="eyebrow">WE'RE HERE TO HELP</p><h2>A conversation is<br><em>the first step.</em></h2><p>Each watch page prepares an inquiry with its Watch ID, price and link. Save several pieces to ask about them together, or reach out directly below.</p><a class="text-link" href="/watches/">Browse the collection ${icon.arrow}</a></div><img src="/logo.jpg" alt="Watch Collection South" loading="lazy"></div>
       <div class="contact-methods"><p class="eyebrow">CHOOSE HOW TO CONNECT</p>
         <a href="${CONTACT.messenger}" target="_blank" rel="noopener"><span>01</span><div><small>MESSAGE US</small><strong>Messenger</strong></div>${icon.arrow}</a>
         <a href="tel:${CONTACT.phone}"><span>02</span><div><small>GIVE US A CALL</small><strong>${CONTACT.displayPhone}</strong></div>${icon.arrow}</a>
