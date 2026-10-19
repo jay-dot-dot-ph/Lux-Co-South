@@ -1,0 +1,10 @@
+node_modules/
+.cache/
+dist/
+.openai/
+.firebase/
+firebase-debug.log
+ui-debug.log
+rolex-sample.csv
+rolex-page.html
+*.tgz
