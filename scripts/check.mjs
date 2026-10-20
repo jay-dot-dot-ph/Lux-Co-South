@@ -6,6 +6,8 @@ import { parseProducts } from './sheet.mjs';
 const root = resolve(import.meta.dirname, '..');
 const dist = join(root, 'dist');
 const catalog = JSON.parse(readFileSync(join(dist, 'api', 'catalog.json'), 'utf8'));
+assert.match(catalog.sourceFingerprint, /^[a-f0-9]{64}$/, 'Sheet source fingerprint missing from build');
+assert.match(JSON.parse(readFileSync(join(dist, 'api', 'site-fingerprint.json'), 'utf8')).fingerprint, /^[a-f0-9]{64}$/, 'Site fingerprint missing from build');
 assert.equal(catalog.brands.length, 23, 'Expected all 23 brand tabs');
 assert(catalog.watches.length > 100, 'Catalog appears incomplete');
 assert.equal(catalog.brands.reduce((sum, brand) => sum + brand.count, 0), catalog.watches.length, 'Brand counts differ from products');

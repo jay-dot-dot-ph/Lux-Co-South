@@ -47,10 +47,12 @@ const brandData = await pool(TABS, 4, async ([tab, gid, label]) => {
   } catch (error) { console.warn(`Image page warning: ${error.message}`); }
   for (const watch of watches) watch.imageSource = links.get(watch.id) || watch.imageSource;
   console.log(`${label}: ${watches.length} watches; ${watches.filter(w => w.imageSource).length} image links`);
-  return { tab, gid, label, watches, rows: parseCsv(csv) };
+  return { tab, gid, label, watches, rows: parseCsv(csv), csv };
 });
 
 const watches = brandData.flatMap(brand => brand.watches);
+const sourceFingerprint = createHash('sha256');
+for (const { gid, csv } of brandData) sourceFingerprint.update(`${gid}\n${csv}\n`);
 const missingLinks = watches.filter(watch => !watch.imageSource);
 mkdirSync(embeddedCache, { recursive: true });
 const embeddedFiles = readdirSync(embeddedCache);
@@ -155,7 +157,7 @@ if (withoutPhotos.length) {
 
 const brands = brandData.map(({ gid, label, watches: rows }) => ({ name: label, slug: slug(label), gid: String(gid), count: rows.length }));
 const catalog = {
-  source: base, fetchedAt: new Date().toISOString(),
+  source: base, fetchedAt: new Date().toISOString(), sourceFingerprint: sourceFingerprint.digest('hex'),
   watches: watches.map(({ imageSource, ...watch }) => watch), brands
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
@@ -185,4 +187,12 @@ writeFileSync(join(dist, '404.html'), page('/', 'Page not found | Lux Co South',
 writeFileSync(join(dist, 'robots.txt'), 'User-agent: *\nAllow: /\n');
 const paths = ['/', '/watches/', '/brands/', '/favorites/', '/contact/', ...brands.map(b => `/watches/${b.slug}/`), ...watches.map(w => `/watch/${w.id}/`)];
 writeFileSync(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map(path => `<url><loc>${origin + path}</loc></url>`).join('')}</urlset>`);
+const siteFingerprint = createHash('sha256')
+  .update(JSON.stringify({ ...catalog, fetchedAt: null }))
+  .update(readFileSync(join(root, 'src', 'index.html')));
+for (const file of ['app.js', 'styles.css', 'logo.jpg', 'hero-watch.png', 'collection-banner.png', 'marble-background.png', 'favicon.svg']) {
+  siteFingerprint.update(readFileSync(join(root, 'src', file)));
+}
+for (const image of readdirSync(join(dist, 'images')).sort()) siteFingerprint.update(image);
+writeFileSync(join(dist, 'api', 'site-fingerprint.json'), JSON.stringify({ fingerprint: siteFingerprint.digest('hex') }));
 console.log(`Built ${watches.length} watches, ${brands.length} brands, ${saved} images; ${missed} image downloads unavailable.`);

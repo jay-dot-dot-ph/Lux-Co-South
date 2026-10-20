@@ -1,0 +1,47 @@
+name: Refresh catalog and deploy Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '8-58/5 * * * *'
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lux-co-south-firebase-live
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check whether the public Sheet changed
+        id: source_check
+        if: github.event_name == 'schedule' && github.event.schedule != '23 * * * *'
+        run: node scripts/check-sheet-sync.mjs
+      - name: Build catalog and photos
+        if: github.event_name != 'schedule' || steps.source_check.outputs.changed == 'true'
+        run: npm run build
+      - name: Validate catalog and product pages
+        if: github.event_name != 'schedule' || steps.source_check.outputs.changed == 'true'
+        run: npm run check
+      - name: Check whether the built site changed
+        id: artifact_check
+        if: github.event_name == 'schedule' && (github.event.schedule == '23 * * * *' || steps.source_check.outputs.changed == 'true')
+        run: node scripts/check-sheet-sync.mjs artifact
+      - name: Deploy to Firebase Hosting
+        if: github.event_name != 'schedule' || steps.artifact_check.outputs.changed == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LUX_CO_SOUTH }}'
+          projectId: lux-co-south
+          channelId: live
