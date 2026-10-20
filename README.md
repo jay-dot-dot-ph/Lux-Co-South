@@ -14,7 +14,7 @@ node scripts/serve.mjs
 
 Open `http://127.0.0.1:4173`. The build downloads the workbook once to recover photos that the Google Sheet page preview does not expose. That download is about 334 MB for the current catalog. Image files are hosted with the site; visitors do not need Google credentials.
 
-Product, price, and stock changes in the Sheet are picked up by the scheduled GitHub workflow after its one-time Firebase credential is configured. See [automatic update setup](automation/README.md). The source Sheet is read only. Favorites are local to each visitor's browser; there are no accounts, cart, checkout, or payments.
+Product, price, and stock changes in the Sheet are picked up by the scheduled GitHub workflow. For a prompt edit-triggered refresh, follow the [one-minute Sheet trigger setup](automation/README.md). The source Sheet is read only. Favorites are local to each visitor's browser; there are no accounts, cart, checkout, or payments.
 
 ## Firebase Hosting
 

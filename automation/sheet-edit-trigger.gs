@@ -10,8 +10,8 @@ const LUX_ATTEMPTS_KEY = 'LUX_DISPATCH_ATTEMPTS';
 const LUX_NEXT_ATTEMPT_KEY = 'LUX_NEXT_DISPATCH_ATTEMPT_AT';
 const LUX_PAUSED_KEY = 'LUX_DISPATCH_PAUSED';
 const LUX_TOKEN_KEY = 'GITHUB_ACTIONS_TOKEN';
-const LUX_DEBOUNCE_MS = 30 * 1000;
-const LUX_MAX_WAIT_MS = 10 * 60 * 1000;
+const LUX_MIN_DISPATCH_INTERVAL_MS = 60 * 1000;
+const LUX_DUPLICATE_EVENT_WINDOW_MS = 5 * 1000;
 const LUX_MAX_ATTEMPTS = 5;
 
 // Run once from the Apps Script editor after setting GITHUB_ACTIONS_TOKEN.
@@ -33,30 +33,36 @@ function setupSheetTriggers() {
   return getSheetTriggerStatus();
 }
 
-// The edit and change triggers only mark the Sheet as dirty. They never send a request per cell.
+// Dispatch the first edit promptly; the one-minute timer catches later edits during the cooldown.
 function markSheetChanged(event) {
   if (!event || !event.source || event.source.getId() !== LUX_SHEET_ID) return;
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
+  let marked = false;
   try {
     const properties = PropertiesService.getScriptProperties();
-    if (!properties.getProperty(LUX_FIRST_PENDING_KEY)) properties.setProperty(LUX_FIRST_PENDING_KEY, String(Date.now()));
-    properties.setProperty(LUX_PENDING_KEY, String(Date.now()));
+    const now = Date.now();
+    const lastDispatch = Number(properties.getProperty(LUX_LAST_DISPATCH_KEY));
+    if (!lastDispatch || now - lastDispatch >= LUX_DUPLICATE_EVENT_WINDOW_MS) {
+      if (!properties.getProperty(LUX_FIRST_PENDING_KEY)) properties.setProperty(LUX_FIRST_PENDING_KEY, String(now));
+      properties.setProperty(LUX_PENDING_KEY, String(now));
+      marked = true;
+    }
   } finally {
     lock.releaseLock();
   }
+  if (marked) dispatchPendingSheetChange();
 }
 
-// Runs every minute and sends one rebuild request after edits have settled.
+// Runs every minute and sends one rebuild request for any edits during the cooldown.
 function dispatchPendingSheetChange() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return;
   try {
     const properties = PropertiesService.getScriptProperties();
     const pending = Number(properties.getProperty(LUX_PENDING_KEY));
-    const firstPending = Number(properties.getProperty(LUX_FIRST_PENDING_KEY));
     if (!pending || properties.getProperty(LUX_PAUSED_KEY) === 'true') return;
-    if (Date.now() - pending < LUX_DEBOUNCE_MS && Date.now() - firstPending < LUX_MAX_WAIT_MS) return;
+    if (Date.now() - Number(properties.getProperty(LUX_LAST_DISPATCH_KEY)) < LUX_MIN_DISPATCH_INTERVAL_MS) return;
     if (Date.now() < Number(properties.getProperty(LUX_NEXT_ATTEMPT_KEY))) return;
     const token = properties.getProperty(LUX_TOKEN_KEY);
     if (!token) {
@@ -116,8 +122,8 @@ function requestCatalogRefresh() {
   properties.deleteProperty(LUX_PAUSED_KEY);
   properties.deleteProperty(LUX_ATTEMPTS_KEY);
   properties.deleteProperty(LUX_NEXT_ATTEMPT_KEY);
-  properties.setProperty(LUX_FIRST_PENDING_KEY, String(Date.now() - LUX_DEBOUNCE_MS));
-  properties.setProperty(LUX_PENDING_KEY, String(Date.now() - LUX_DEBOUNCE_MS));
+  properties.setProperty(LUX_FIRST_PENDING_KEY, String(Date.now()));
+  properties.setProperty(LUX_PENDING_KEY, String(Date.now()));
   dispatchPendingSheetChange();
   return getSheetTriggerStatus();
 }
