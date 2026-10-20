@@ -1201,3 +1201,45 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .photo-viewer-tools { align-items: stretch; flex-direction: column; gap: 8px; text-align: center; }
   .photo-viewer-tools > div { justify-content: center; }
 }
+
+/* Compact directory and contact pages. */
+#about { scroll-margin-top: 86px; }
+.brands-main .page-intro-inner, .contact-main .page-intro-inner { min-height: 0; padding-block: 30px 34px; }
+.brands-main .page-intro h1, .contact-main .page-intro h1 { margin-bottom: 8px; font-size: clamp(38px, 3.5vw, 56px); }
+.brands-main .brands-page, .contact-main .contact-page { padding-block: 36px 72px; }
+.brands-main .brand-directory { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.brands-main .brand-tile { min-height: 152px; padding: 18px 20px; }
+.brands-main .brand-tile-index { font-size: 14px; }
+.brands-main .brand-tile strong { font-size: clamp(21px, 1.8vw, 28px); }
+.contact-main .contact-lead { gap: 30px; margin-bottom: 34px; padding: 26px 34px; border-radius: 12px; }
+.contact-main .contact-lead h2 { margin-bottom: 12px; font-size: clamp(36px, 3.6vw, 54px); line-height: 1; }
+.contact-main .contact-lead p:not(.eyebrow) { margin-bottom: 12px; line-height: 1.6; }
+.contact-main .contact-lead > img { width: 150px; }
+.contact-main .contact-methods { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.contact-main .contact-methods > .eyebrow { margin-bottom: 0; }
+.contact-main .contact-methods > a { min-height: 130px; padding: 18px; }
+.contact-main .contact-methods > a > span { font-size: 14px; }
+.contact-main .contact-methods strong { font-size: 20px; }
+.contact-main .contact-visit { padding-block: 48px; }
+.contact-main .contact-visit h2 { font-size: clamp(36px, 3.5vw, 54px); }
+@media (max-width: 1100px) {
+  .brands-main .brand-directory { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .contact-main .contact-methods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  #about { scroll-margin-top: 68px; }
+  .brands-main .page-intro-inner, .contact-main .page-intro-inner { padding-block: 26px 30px; }
+  .brands-main .brands-page, .contact-main .contact-page { padding-block: 28px 56px; }
+  .brands-main .brand-directory { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .brands-main .brand-tile { min-height: 142px; padding: 16px; }
+  .brands-main .brand-tile strong { font-size: 22px; }
+  .contact-main .contact-lead { padding: 22px; }
+  .contact-main .contact-lead > img { display: none; }
+  .contact-main .contact-methods > a { min-height: 112px; }
+}
+@media (max-width: 480px) {
+  .brands-main .brand-tile { min-height: 132px; padding: 14px; }
+  .brands-main .brand-tile strong { font-size: 20px; }
+  .contact-main .contact-methods { grid-template-columns: 1fr; }
+  .contact-main .contact-methods > a { min-height: 92px; }
+}

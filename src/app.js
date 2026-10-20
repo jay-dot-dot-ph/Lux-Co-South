@@ -245,7 +245,7 @@ function renderResults() {
 
 function brandsPage() {
   const brands = [...catalog.brands].sort((a, b) => a.name.localeCompare(b.name));
-  app.innerHTML = header('Brands') + `<main>${pageIntro('BRANDS', 'Shop by brand.', `Explore ${brands.length} brands.`)}
+  app.innerHTML = header('Brands') + `<main class="brands-main">${pageIntro('BRANDS', 'Shop by brand.', `Explore ${brands.length} brands.`)}
     <section class="brands-page section-pad"><div class="wrap"><div class="brand-page-header"><p>THE DIRECTORY</p><span>${brands.length} MAISONS · ${catalog.watches.length} WATCHES</span></div>
       <div class="brand-directory">${brands.map((brand, index) => `<a href="${brandLink(brand)}" class="brand-tile"><span class="brand-tile-index">${String(index + 1).padStart(2, '0')}</span><strong>${esc(brand.name)}</strong><span class="brand-tile-foot"><small>${brand.count} WATCHES</small>${icon.arrow}</span></a>`).join('')}</div>
     </div></section></main>` + footer();
@@ -487,7 +487,7 @@ function favoritesPage() {
 }
 
 function contactPage() {
-  app.innerHTML = header('Contact') + `<main>${pageIntro('CONTACT', "Let's talk watches.", 'Ask about a watch or plan a visit.')}
+  app.innerHTML = header('Contact') + `<main class="contact-main">${pageIntro('CONTACT', "Let's talk watches.", 'Ask about a watch or plan a visit.')}
     <section class="contact-page section-pad"><div class="wrap">
       <div class="contact-lead"><div><p class="eyebrow">GET IN TOUCH</p><h2>How can we<br><em>help?</em></h2><p>Ask about availability, details or visiting the store.</p><a class="text-link" href="/watches/">Browse watches ${icon.arrow}</a></div><img src="/logo.jpg" alt="Watch Collection South" loading="lazy"></div>
       <div class="contact-methods"><p class="eyebrow">CHOOSE HOW TO CONNECT</p>
@@ -848,6 +848,12 @@ function render() {
   else if (path.startsWith('/watch/')) detailPage();
   else app.innerHTML = header() + `<main class="wrap empty-state page-empty"><span class="empty-symbol">✧</span><h1>Page not found.</h1><p>Let's find a watch instead.</p><a class="button button-primary" href="/watches/">EXPLORE WATCHES ${icon.arrow}</a></main>` + footer();
   updateCompareUI();
+  if (path === '/' && location.hash) {
+    requestAnimationFrame(() => {
+      const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      target?.scrollIntoView({ behavior: 'instant', block: 'start' });
+    });
+  }
 }
 
 setTheme(document.documentElement.dataset.theme || 'dark', false);
