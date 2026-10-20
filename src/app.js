@@ -284,10 +284,8 @@ function setupDetailZoom(watch) {
     if (event.pointerType !== 'mouse') return;
     if (photo.classList.contains('touch-zoom')) {
       photo.classList.remove('touch-zoom');
-      photo.removeAttribute('role');
-      photo.removeAttribute('tabindex');
       photo.removeAttribute('aria-pressed');
-      photo.removeAttribute('aria-label');
+      photo.setAttribute('aria-label', 'Zoom watch photo');
     }
     const bounds = photo.getBoundingClientRect();
     setPosition((event.clientX - bounds.left) / bounds.width * 100,
@@ -340,13 +338,15 @@ function setupDetailZoom(watch) {
   });
   photo.addEventListener('pointercancel', () => { touch = null; });
   photo.addEventListener('click', event => {
-    if (event.pointerType === 'mouse') {
-      openPhotoViewer(watch, photo.parentElement.querySelector('[data-open-photo]'));
-    }
+    if (event.pointerType !== 'touch') openPhotoViewer(watch, photo);
   });
   photo.addEventListener('keydown', event => {
-    if (!photo.classList.contains('touch-zoom') || !['Enter', ' '].includes(event.key)) return;
+    if (!['Enter', ' '].includes(event.key)) return;
     event.preventDefault();
+    if (!photo.classList.contains('touch-zoom')) {
+      openPhotoViewer(watch, photo);
+      return;
+    }
     if (photo.classList.contains('zoom-active')) resetZoom();
     else {
       setPosition(50, 50);
@@ -462,7 +462,7 @@ function detailPage() {
       <section class="spec-section">${sectionHead('01', 'THE DETAILS', 'The finer points.')}
         <dl>${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl></section>
       </div>
-      <div class="detail-media"><div class="detail-photo" ${watch.image ? 'data-photo-zoom' : ''}>${image(watch, { eager: true })}${watch.image ? '<span class="detail-zoom-hint" aria-hidden="true">Tap to zoom</span>' : ''}</div>${watch.image ? `<button class="photo-view-trigger" type="button" data-open-photo="${esc(watch.id)}" aria-label="Open larger photo of ${esc(name(watch))}">OPEN PHOTO <span aria-hidden="true">↗</span></button>` : ''}<div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
+      <div class="detail-media"><div class="detail-photo" ${watch.image ? 'data-photo-zoom role="button" tabindex="0" aria-label="Zoom watch photo"' : ''}>${image(watch, { eager: true })}${watch.image ? '<span class="detail-zoom-hint" aria-hidden="true">Tap to zoom</span>' : ''}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
     </div>
     ${related.length ? `<section class="related-section">${sectionHead('02', 'CONTINUE EXPLORING', `More from ${esc(watch.brand)}.`, `/watches/${esc(watch.brandSlug)}/`, 'See all')}<div class="watch-grid">${related.map(card).join('')}</div></section>` : ''}
   </div></main><div class="mobile-inquiry"><span>${money(watch.price)}</span><button type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button></div>` + footer();
@@ -691,12 +691,6 @@ function closeFilters() {
 }
 
 document.addEventListener('click', async event => {
-  const photoTrigger = event.target.closest('[data-open-photo]');
-  if (photoTrigger) {
-    const watch = catalog.watches.find(item => item.id === photoTrigger.dataset.openPhoto);
-    if (watch?.image) openPhotoViewer(watch, photoTrigger);
-    return;
-  }
   const filterChoice = event.target.closest('[data-filter-choice]');
   if (filterChoice) {
     const key = filterChoice.dataset.filterChoice;
