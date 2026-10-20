@@ -297,9 +297,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .detail-heart { width: 56px; flex: 0 0 56px; display: grid; place-items: center; border: 1px solid var(--line-strong); background: transparent; color: var(--gold-light); transition: color var(--fast), background var(--fast); }
 .detail-heart:hover, .detail-heart.is-saved { color: #12100c; background: var(--gold); }
 .detail-note { margin: 14px 0 17px; color: var(--text-muted); font-size: 11px; line-height: 1.6; }
-.copy-link { display: inline-flex; align-items: center; gap: 10px; padding: 0 0 7px; border: 0; border-bottom: 1px solid var(--gold-muted); background: none; color: var(--gold-light); font: 700 9px var(--sans); letter-spacing: .14em; }
-.copy-link:hover { color: var(--text); }
-.copy-link svg { width: 15px; }
 .detail-assurance { display: grid; gap: 12px; margin-top: 47px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--text-muted); font: 700 9px var(--sans); letter-spacing: .12em; }
 .related-section { margin-top: 72px; }
 .detail-copy .spec-section { margin-top: 26px; }
@@ -722,12 +719,9 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .card-photo img { transition: transform var(--normal); }
 .watch-card:hover .card-photo img { transform: scale(1.06); }
 .hero-search { border: 0; background: transparent; cursor: pointer; }
-.detail-extra { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-top: 16px; }
-.detail-extra .copy-link { margin-top: 0; }
 .compare-add { width: fit-content; margin-top: 13px; padding: 8px 13px; border: 1px solid var(--line-strong); background: transparent; color: var(--gold-light); font: 700 10px var(--sans); letter-spacing: .03em; transition: background var(--fast), border-color var(--fast), transform var(--fast); }
 .compare-add:hover, .compare-add.is-compared { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, transparent); transform: translateY(-1px); }
-.quick-info .compare-add, .detail-extra .compare-add { margin: 0 0 20px; }
-.detail-extra .compare-add { margin: 0; }
+.quick-info .compare-add { margin: 0 0 20px; }
 .view-switch { display: flex; flex: none; gap: 3px; align-items: center; padding: 4px; border: 1px solid var(--line-strong); background: var(--surface); }
 .view-switch button { width: 45px; height: 45px; display: grid; place-items: center; border: 0; background: transparent; color: var(--text-muted); }
 .view-switch button[aria-pressed="true"] { background: var(--gold); color: #15100a; }

@@ -457,7 +457,6 @@ function detailPage() {
         <p class="detail-description">${esc(watch.description || 'Ask us for more details about this watch.')}</p>
         <div class="detail-actions"><button class="button button-primary" type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button>
           <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
-        <div class="detail-extra"><button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button><button class="copy-link" type="button" data-share="${esc(watch.id)}">COPY LINK ${icon.arrow}</button></div>
         </div>
         <section class="spec-section"><h2 class="detail-spec-heading">DETAILS</h2>
           <dl>${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl></section>
@@ -794,8 +793,6 @@ document.addEventListener('click', async event => {
   if (inquiryButton) { await handleInquiry(inquiryButton, catalog.watches.filter(watch => watch.id === inquiryButton.dataset.inquire)); return; }
   const selectedButton = event.target.closest('[data-inquire-selected]');
   if (selectedButton) { await handleInquiry(selectedButton, catalog.watches.filter(watch => selection.has(watch.id))); return; }
-  const share = event.target.closest('[data-share]');
-  if (share) toast(await copyText(location.origin + link({ id: share.dataset.share })) ? 'Watch link copied.' : 'Could not copy the link.');
 });
 document.addEventListener('change', event => {
   const checkbox = event.target.closest('[data-select]');
