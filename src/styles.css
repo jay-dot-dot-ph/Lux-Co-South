@@ -1168,3 +1168,17 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .brand-feature-grid { grid-template-columns: 1fr; }
   .brand-feature { min-height: 175px; }
 }
+
+/* Magnify the product photo within its frame on mouse and touch screens. */
+.detail-photo[data-photo-zoom] { position: relative; overflow: hidden; }
+.detail-zoom-hint { display: none; position: absolute; left: 50%; bottom: 18px; z-index: 1; transform: translateX(-50%); white-space: nowrap; padding: 8px 12px; background: #171511e6; color: #fff; font-size: 11px; letter-spacing: .03em; pointer-events: none; }
+.detail-photo[data-photo-zoom].touch-zoom { touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.detail-photo[data-photo-zoom].touch-zoom.zoom-active { touch-action: none; }
+.detail-photo[data-photo-zoom].touch-zoom > img { transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%); transition: transform .18s ease-out; }
+.detail-photo[data-photo-zoom].touch-zoom.zoom-active > img { transform: scale(2.25); }
+@media (hover: none), (pointer: coarse) { .detail-zoom-hint { display: block; } }
+@media (hover: hover) and (pointer: fine) {
+  .detail-photo[data-photo-zoom] { cursor: zoom-in; }
+  .detail-photo[data-photo-zoom] > img { transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%); transition: transform .18s ease-out; }
+  .detail-photo[data-photo-zoom].zoom-active > img { transform: scale(2.25); }
+}

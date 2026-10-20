@@ -251,6 +251,108 @@ function brandsPage() {
     </div></section></main>` + footer();
 }
 
+function setupDetailZoom() {
+  const photo = document.querySelector('[data-photo-zoom]');
+  if (!photo) return;
+  const hint = photo.querySelector('.detail-zoom-hint');
+  const zoom = 2.25;
+  let touch = null;
+  const clamp = value => Math.max(0, Math.min(100, value));
+  const setPosition = (x, y) => {
+    photo.style.setProperty('--zoom-x', `${clamp(x)}%`);
+    photo.style.setProperty('--zoom-y', `${clamp(y)}%`);
+  };
+  const resetZoom = () => {
+    photo.classList.remove('zoom-active');
+    photo.style.removeProperty('--zoom-x');
+    photo.style.removeProperty('--zoom-y');
+    if (photo.classList.contains('touch-zoom')) {
+      photo.setAttribute('aria-pressed', 'false');
+      photo.setAttribute('aria-label', 'Tap to zoom watch photo');
+    }
+    hint.textContent = 'Tap to zoom';
+  };
+  const enableTouchZoom = () => {
+    photo.classList.add('touch-zoom');
+    photo.setAttribute('role', 'button');
+    photo.setAttribute('tabindex', '0');
+    if (!photo.hasAttribute('aria-pressed')) resetZoom();
+  };
+  if (matchMedia('(hover: none), (pointer: coarse)').matches) enableTouchZoom();
+
+  const moveZoom = event => {
+    if (event.pointerType !== 'mouse') return;
+    if (photo.classList.contains('touch-zoom')) {
+      photo.classList.remove('touch-zoom');
+      photo.removeAttribute('role');
+      photo.removeAttribute('tabindex');
+      photo.removeAttribute('aria-pressed');
+      photo.removeAttribute('aria-label');
+    }
+    const bounds = photo.getBoundingClientRect();
+    setPosition((event.clientX - bounds.left) / bounds.width * 100,
+      (event.clientY - bounds.top) / bounds.height * 100);
+    photo.classList.add('zoom-active');
+  };
+  photo.addEventListener('pointerenter', moveZoom);
+  photo.addEventListener('pointermove', event => {
+    if (event.pointerType === 'mouse') { moveZoom(event); return; }
+    if (event.pointerType !== 'touch' || !touch || event.pointerId !== touch.id) return;
+    const dx = event.clientX - touch.startX;
+    const dy = event.clientY - touch.startY;
+    if (Math.hypot(dx, dy) > 8) touch.moved = true;
+    if (touch.moved && photo.classList.contains('zoom-active')) {
+      const bounds = photo.getBoundingClientRect();
+      setPosition(touch.originX - dx / ((zoom - 1) * bounds.width) * 100,
+        touch.originY - dy / ((zoom - 1) * bounds.height) * 100);
+    }
+  });
+  photo.addEventListener('pointerleave', event => {
+    if (event.pointerType === 'mouse') resetZoom();
+  });
+  photo.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'touch') return;
+    enableTouchZoom();
+    const originX = parseFloat(photo.style.getPropertyValue('--zoom-x'));
+    const originY = parseFloat(photo.style.getPropertyValue('--zoom-y'));
+    touch = {
+      id: event.pointerId, startX: event.clientX, startY: event.clientY,
+      originX: Number.isFinite(originX) ? originX : 50,
+      originY: Number.isFinite(originY) ? originY : 50,
+      moved: false
+    };
+  });
+  photo.addEventListener('pointerup', event => {
+    if (event.pointerType !== 'touch' || !touch || event.pointerId !== touch.id) return;
+    if (!touch.moved) {
+      if (photo.classList.contains('zoom-active')) resetZoom();
+      else {
+        const bounds = photo.getBoundingClientRect();
+        setPosition((event.clientX - bounds.left) / bounds.width * 100,
+          (event.clientY - bounds.top) / bounds.height * 100);
+        photo.classList.add('zoom-active');
+        photo.setAttribute('aria-pressed', 'true');
+        photo.setAttribute('aria-label', 'Zoomed watch photo. Drag to explore or tap to zoom out');
+        hint.textContent = 'Drag to explore · Tap to close';
+      }
+    }
+    touch = null;
+  });
+  photo.addEventListener('pointercancel', () => { touch = null; });
+  photo.addEventListener('keydown', event => {
+    if (!photo.classList.contains('touch-zoom') || !['Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    if (photo.classList.contains('zoom-active')) resetZoom();
+    else {
+      setPosition(50, 50);
+      photo.classList.add('zoom-active');
+      photo.setAttribute('aria-pressed', 'true');
+      photo.setAttribute('aria-label', 'Zoomed watch photo. Drag to explore or tap to zoom out');
+      hint.textContent = 'Drag to explore · Tap to close';
+    }
+  });
+}
+
 function detailPage() {
   const id = path.split('/')[2]?.toUpperCase();
   const watch = catalog.watches.find(item => item.id === id);
@@ -273,12 +375,13 @@ function detailPage() {
           <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
         <div class="detail-extra"><button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button><button class="copy-link" type="button" data-share="${esc(watch.id)}">COPY LINK ${icon.arrow}</button></div>
       </div>
-      <div class="detail-media"><div class="detail-photo">${image(watch, { eager: true })}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
+      <div class="detail-media"><div class="detail-photo" ${watch.image ? 'data-photo-zoom' : ''}>${image(watch, { eager: true })}${watch.image ? '<span class="detail-zoom-hint" aria-hidden="true">Tap to zoom</span>' : ''}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
     </div>
     <section class="spec-section">${sectionHead('01', 'THE DETAILS', 'The finer points.')}
       <dl>${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl></section>
     ${related.length ? `<section class="related-section">${sectionHead('02', 'CONTINUE EXPLORING', `More from ${esc(watch.brand)}.`, `/watches/${esc(watch.brandSlug)}/`, 'See all')}<div class="watch-grid">${related.map(card).join('')}</div></section>` : ''}
   </div></main><div class="mobile-inquiry"><span>${money(watch.price)}</span><button type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button></div>` + footer();
+  setupDetailZoom();
 }
 
 function favoritesPage() {
