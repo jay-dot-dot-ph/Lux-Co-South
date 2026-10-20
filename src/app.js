@@ -119,7 +119,7 @@ function card(watch) {
 }
 
 function sectionHead(number, eyebrow, title, href, label = 'View all') {
-  return `<div class="section-head"><div><span class="section-index">${number}</span><p class="eyebrow">${eyebrow}</p><h2>${title}</h2></div>${href ? `<a class="text-link" href="${href}">${label} ${icon.arrow}</a>` : ''}</div>`;
+  return `<div class="section-head"><div>${number ? `<span class="section-index">${number}</span>` : ''}<p class="eyebrow">${eyebrow}</p><h2>${title}</h2></div>${href ? `<a class="text-link" href="${href}">${label} ${icon.arrow}</a>` : ''}</div>`;
 }
 
 function pageIntro(eyebrow, title, description, detail = '') {
@@ -136,9 +136,8 @@ function home() {
   const featuredBrands = [...catalog.brands].sort((a, b) => b.count - a.count).slice(0, 6);
   app.innerHTML = header('Home') + `<main>
     <section class="hero"><div class="wrap hero-layout">
-      <div class="hero-copy"><p class="eyebrow">TIMELESS STYLE</p>
+      <div class="hero-copy">
         <h1>Inspired By<br><em>Love and<br>Elegance</em></h1>
-        <p class="hero-description">A curated collection of timepieces for everyday elegance.</p>
         <div class="hero-buttons"><a class="button button-primary" href="/watches/">EXPLORE COLLECTION ${icon.arrow}</a></div>
         <div class="hero-promises"><span>✧ <small>CURATED<br>SELECTION</small></span><span>◇ <small>INSPECT BEFORE<br>PAYING</small></span><span>⇢ <small>NATIONWIDE<br>DELIVERY</small></span></div>
       </div>
@@ -146,7 +145,7 @@ function home() {
     </div>
       <div class="hero-bottom"><div class="wrap"><span>${catalog.watches.length.toLocaleString()} WATCHES <i></i> ${catalog.brands.length} BRANDS</span></div></div>
     </section>
-    <section class="home-brands section-pad"><div class="wrap">${sectionHead('01', 'BRANDS', 'Shop by brand.', '/brands/', 'All brands')}
+    <section class="home-brands section-pad"><div class="wrap">${sectionHead('', 'BRANDS', 'Shop by brand.', '/brands/', 'All brands')}
       <div class="brand-feature-grid">${featuredBrands.map((brand, index) => `<a class="brand-feature" href="${brandLink(brand)}"><span class="brand-feature-top"><small>${String(index + 1).padStart(2, '0')}</small><span>${icon.arrow}</span></span><strong>${esc(brand.name)}</strong><span class="brand-feature-count">${brand.count} WATCHES</span></a>`).join('')}</div>
     </div></section>
     <section class="home-featured section-pad"><div class="wrap">${sectionHead('02', 'FEATURED', 'Explore the collection.', '/watches/', 'View all')}

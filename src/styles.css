@@ -107,6 +107,7 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .page-intro-detail { flex: none; padding-bottom: 7px; color: var(--gold-muted); font: 700 10px var(--sans); letter-spacing: .16em; text-align: right; }
 .section-head { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 38px; }
 .section-head > div { position: relative; padding-left: 43px; }
+.section-head > div:not(:has(.section-index)) { padding-left: 0; }
 .section-head .eyebrow { margin-bottom: 12px; }
 .section-index { position: absolute; top: 3px; left: 0; color: var(--gold-muted); font: 400 17px var(--serif); }
 .section-head h2 { margin: 0; color: var(--text); font: 500 clamp(39px, 4vw, 63px)/1 var(--serif); letter-spacing: -.02em; }
