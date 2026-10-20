@@ -11,7 +11,7 @@ After the secret is set, run [Refresh catalog and deploy Firebase Hosting](https
 ## Install the one-minute edit trigger
 
 1. Create a [fine-grained GitHub personal access token](https://github.com/settings/personal-access-tokens/new) for `jay-dot-dot-ph/Lux-Co-South` with repository **Actions: Read and write** permission. Set an expiration reminder. Do not paste the token into chat or source code.
-2. Open the source Sheet, choose **Extensions > Apps Script**, and paste [sheet-edit-trigger.gs](sheet-edit-trigger.gs) into the bound project's `Code.gs`.
+2. Open the source Sheet, choose **Extensions > Apps Script**, and paste [sheet-edit-trigger.gs](sheet-edit-trigger.gs) into `Code.gs`. A standalone Apps Script project also works if you have edit access to the Sheet.
 3. In **Project Settings > Script Properties**, add `GITHUB_ACTIONS_TOKEN` with the token as its value.
 4. Run `setupSheetTriggers` once and approve the Google authorization prompts. This installs edit, change, and one-minute timer triggers. Run `requestCatalogRefresh` once to verify a new `workflow_dispatch` run appears in GitHub Actions.
 

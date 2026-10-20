@@ -1,4 +1,4 @@
-// Copy this file into the Apps Script project bound to the 2026 WATCHES - LUX CO Sheet.
+// Copy this file into an Apps Script project owned by an editor of the 2026 WATCHES - LUX CO Sheet.
 // Store the repository-scoped GitHub token in Script Properties as GITHUB_ACTIONS_TOKEN.
 const LUX_SHEET_ID = '1qowXiNelPflvWPYv1lWWCf7z9AnltCL5Tem8Sus-arI';
 const LUX_WORKFLOW_URL = 'https://api.github.com/repos/jay-dot-dot-ph/Lux-Co-South/actions/workflows/firebase-hosting.yml/dispatches';
@@ -16,10 +16,7 @@ const LUX_MAX_ATTEMPTS = 5;
 
 // Run once from the Apps Script editor after setting GITHUB_ACTIONS_TOKEN.
 function setupSheetTriggers() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  if (!spreadsheet || spreadsheet.getId() !== LUX_SHEET_ID) {
-    throw new Error('Open the 2026 WATCHES - LUX CO spreadsheet before installing these triggers.');
-  }
+  const spreadsheet = SpreadsheetApp.openById(LUX_SHEET_ID);
   if (!PropertiesService.getScriptProperties().getProperty(LUX_TOKEN_KEY)) {
     throw new Error('Set GITHUB_ACTIONS_TOKEN in Project Settings > Script Properties first.');
   }

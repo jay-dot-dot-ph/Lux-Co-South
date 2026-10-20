@@ -31,7 +31,7 @@ const context = {
   String,
   Boolean,
   Error,
-  SpreadsheetApp: { getActiveSpreadsheet: () => ({ getId: () => sheetId }) },
+  SpreadsheetApp: { openById: (id) => { assert.equal(id, sheetId); return { getId: () => sheetId }; } },
   PropertiesService: { getScriptProperties: () => properties },
   ScriptApp: {
     getProjectTriggers: () => triggers.map((trigger) => ({ getHandlerFunction: () => trigger.name, trigger })),
