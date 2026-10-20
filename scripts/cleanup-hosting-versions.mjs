@@ -64,17 +64,13 @@ if (process.argv[2] === '--apply' && (!previousId || previousId === currentId)) 
   throw new Error('No new live release was confirmed; refusing to delete older versions.');
 }
 
-const releases = await list('/channels/live/releases', 'releases');
-const liveReleaseIds = new Set(releases.map((release) => versionId(release.version?.name)));
-if (!liveReleaseIds.has(currentId)) throw new Error('The current live version is missing from release history.');
 const versions = await list('/versions', 'versions');
 const currentReleaseTime = Date.parse(live.release.releaseTime);
 if (!Number.isFinite(currentReleaseTime)) throw new Error('The live release time is invalid.');
 const oldVersions = versions.filter((version) => version.status === 'FINALIZED'
-  && liveReleaseIds.has(versionId(version.name))
   && versionId(version.name) !== currentId
   && Date.parse(version.finalizeTime) < currentReleaseTime);
-console.log(`Current live version: ${currentId}. Older finalized live versions: ${oldVersions.length}.`);
+console.log(`Current live version: ${currentId}. Older finalized versions: ${oldVersions.length}.`);
 if (process.argv[2] !== '--apply') {
   console.log('Dry run only. Pass --apply after a successful deployment to delete older versions.');
   process.exit(0);
