@@ -251,7 +251,7 @@ function brandsPage() {
     </div></section></main>` + footer();
 }
 
-function setupDetailZoom() {
+function setupDetailZoom(watch) {
   const photo = document.querySelector('[data-photo-zoom]');
   if (!photo) return;
   const hint = photo.querySelector('.detail-zoom-hint');
@@ -339,6 +339,11 @@ function setupDetailZoom() {
     touch = null;
   });
   photo.addEventListener('pointercancel', () => { touch = null; });
+  photo.addEventListener('click', event => {
+    if (event.pointerType === 'mouse') {
+      openPhotoViewer(watch, photo.parentElement.querySelector('[data-open-photo]'));
+    }
+  });
   photo.addEventListener('keydown', event => {
     if (!photo.classList.contains('touch-zoom') || !['Enter', ' '].includes(event.key)) return;
     event.preventDefault();
@@ -351,6 +356,84 @@ function setupDetailZoom() {
       hint.textContent = 'Drag to explore · Tap to close';
     }
   });
+}
+
+function openPhotoViewer(watch, trigger) {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'photo-viewer';
+  dialog.setAttribute('aria-label', `Photo of ${name(watch)}`);
+  dialog.innerHTML = `<div class="photo-viewer-head"><span>${esc(watch.brand)} <span aria-hidden="true">·</span> ${esc(watch.model)}</span><button type="button" data-photo-close aria-label="Close photo viewer">${icon.close}</button></div>
+    <div class="photo-viewer-stage" aria-label="Drag to move the zoomed photo">${image(watch, { eager: true })}</div>
+    <div class="photo-viewer-tools"><span>Drag to explore · Pinch or use the controls to zoom</span><div><button type="button" data-photo-minus aria-label="Zoom out">−</button><output aria-live="polite">100%</output><button type="button" data-photo-plus aria-label="Zoom in">+</button><button type="button" data-photo-reset>Fit image</button></div></div>`;
+  document.body.appendChild(dialog);
+  document.body.classList.add('modal-open');
+  dialog.addEventListener('close', () => {
+    dialog.remove();
+    document.body.classList.remove('modal-open');
+    if (trigger.isConnected) trigger.focus();
+  });
+  dialog.showModal();
+  const closeButton = dialog.querySelector('[data-photo-close]');
+  closeButton.addEventListener('click', () => dialog.close());
+  closeButton.focus();
+
+  const stage = dialog.querySelector('.photo-viewer-stage');
+  const picture = stage.querySelector('img');
+  const output = dialog.querySelector('output');
+  const pointers = new Map();
+  let scale = 1, x = 0, y = 0, pinchDistance = 0, pinchScale = 1;
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const update = () => {
+    const maxX = Math.max(0, (picture.offsetWidth * scale - stage.clientWidth) / 2);
+    const maxY = Math.max(0, (picture.offsetHeight * scale - stage.clientHeight) / 2);
+    x = clamp(x, -maxX, maxX);
+    y = clamp(y, -maxY, maxY);
+    picture.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    output.value = `${Math.round(scale * 100)}%`;
+    stage.classList.toggle('is-zoomed', scale > 1);
+  };
+  const setScale = value => {
+    scale = clamp(value, 1, 4);
+    update();
+  };
+  dialog.querySelector('[data-photo-minus]').addEventListener('click', () => setScale(scale - .5));
+  dialog.querySelector('[data-photo-plus]').addEventListener('click', () => setScale(scale + .5));
+  dialog.querySelector('[data-photo-reset]').addEventListener('click', () => { scale = 1; x = 0; y = 0; update(); });
+  dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+  stage.addEventListener('wheel', event => { event.preventDefault(); setScale(scale + (event.deltaY < 0 ? .25 : -.25)); }, { passive: false });
+  stage.addEventListener('dblclick', () => setScale(scale > 1 ? 1 : 2));
+  stage.addEventListener('pointerdown', event => {
+    stage.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinchDistance = Math.hypot(a.x - b.x, a.y - b.y);
+      pinchScale = scale;
+    }
+  });
+  stage.addEventListener('pointermove', event => {
+    const previous = pointers.get(event.pointerId);
+    if (!previous) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      if (pinchDistance) setScale(pinchScale * Math.hypot(a.x - b.x, a.y - b.y) / pinchDistance);
+    } else if (scale > 1) {
+      x += event.clientX - previous.x;
+      y += event.clientY - previous.y;
+      update();
+    }
+  });
+  const release = event => {
+    pointers.delete(event.pointerId);
+    pinchDistance = 0;
+  };
+  stage.addEventListener('pointerup', release);
+  stage.addEventListener('pointercancel', release);
+  const resizeEvents = new AbortController();
+  dialog.addEventListener('close', () => resizeEvents.abort(), { once: true });
+  window.addEventListener('resize', update, { signal: resizeEvents.signal });
+  update();
 }
 
 function detailPage() {
@@ -375,13 +458,13 @@ function detailPage() {
           <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
         <div class="detail-extra"><button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button><button class="copy-link" type="button" data-share="${esc(watch.id)}">COPY LINK ${icon.arrow}</button></div>
       </div>
-      <div class="detail-media"><div class="detail-photo" ${watch.image ? 'data-photo-zoom' : ''}>${image(watch, { eager: true })}${watch.image ? '<span class="detail-zoom-hint" aria-hidden="true">Tap to zoom</span>' : ''}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
+      <div class="detail-media"><div class="detail-photo" ${watch.image ? 'data-photo-zoom' : ''}>${image(watch, { eager: true })}${watch.image ? '<span class="detail-zoom-hint" aria-hidden="true">Tap to zoom</span>' : ''}</div>${watch.image ? `<button class="photo-view-trigger" type="button" data-open-photo="${esc(watch.id)}" aria-label="Open larger photo of ${esc(name(watch))}">OPEN PHOTO <span aria-hidden="true">↗</span></button>` : ''}<div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
     </div>
     <section class="spec-section">${sectionHead('01', 'THE DETAILS', 'The finer points.')}
       <dl>${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl></section>
     ${related.length ? `<section class="related-section">${sectionHead('02', 'CONTINUE EXPLORING', `More from ${esc(watch.brand)}.`, `/watches/${esc(watch.brandSlug)}/`, 'See all')}<div class="watch-grid">${related.map(card).join('')}</div></section>` : ''}
   </div></main><div class="mobile-inquiry"><span>${money(watch.price)}</span><button type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button></div>` + footer();
-  setupDetailZoom();
+  setupDetailZoom(watch);
 }
 
 function favoritesPage() {
@@ -606,6 +689,12 @@ function closeFilters() {
 }
 
 document.addEventListener('click', async event => {
+  const photoTrigger = event.target.closest('[data-open-photo]');
+  if (photoTrigger) {
+    const watch = catalog.watches.find(item => item.id === photoTrigger.dataset.openPhoto);
+    if (watch?.image) openPhotoViewer(watch, photoTrigger);
+    return;
+  }
   const filterChoice = event.target.closest('[data-filter-choice]');
   if (filterChoice) {
     const key = filterChoice.dataset.filterChoice;
@@ -724,7 +813,7 @@ document.addEventListener('input', event => {
   if (event.target.id === 'global-search') updateSearchSuggestions();
 });
 document.addEventListener('keydown', event => {
-  const modal = document.querySelector('.utility-backdrop') || document.querySelector('.quick-view-backdrop');
+  const modal = document.querySelector('.photo-viewer[open]') || document.querySelector('.utility-backdrop') || document.querySelector('.quick-view-backdrop');
   if (modal && event.key === 'Tab') {
     const controls = [...modal.querySelectorAll('button, a[href], input')].filter(element => !element.disabled);
     const first = controls[0], last = controls.at(-1);
@@ -742,7 +831,12 @@ document.addEventListener('keydown', event => {
     return;
   }
   if (event.key === 'Escape') {
-    if (modal) { modal.classList.contains('utility-backdrop') ? closeOverlay() : closeQuickView(); return; }
+    if (modal) {
+      if (modal.matches('.photo-viewer')) modal.close();
+      else if (modal.classList.contains('utility-backdrop')) closeOverlay();
+      else closeQuickView();
+      return;
+    }
     closeFilters();
     const menu = document.getElementById('mobile-menu');
     if (menu && !menu.hidden) {
