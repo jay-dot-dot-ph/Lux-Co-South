@@ -193,6 +193,9 @@ const siteFingerprint = createHash('sha256')
 for (const file of ['app.js', 'styles.css', 'logo.jpg', 'hero-watch.png', 'collection-banner.png', 'marble-background.png', 'favicon.svg']) {
   siteFingerprint.update(readFileSync(join(root, 'src', file)));
 }
-for (const image of readdirSync(join(dist, 'images')).sort()) siteFingerprint.update(image);
+for (const image of readdirSync(join(dist, 'images')).sort()) {
+  siteFingerprint.update(image);
+  siteFingerprint.update(readFileSync(join(dist, 'images', image)));
+}
 writeFileSync(join(dist, 'api', 'site-fingerprint.json'), JSON.stringify({ fingerprint: siteFingerprint.digest('hex') }));
 console.log(`Built ${watches.length} watches, ${brands.length} brands, ${saved} images; ${missed} image downloads unavailable.`);
