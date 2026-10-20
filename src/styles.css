@@ -144,11 +144,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .brand-feature:hover strong { color: var(--gold-light); }
 .brand-feature-count { color: var(--gold-muted); font: 700 9px var(--sans); letter-spacing: .18em; }
 .home-featured { background: #13110f; }
-.home-featured .watch-card:first-child { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; }
-.home-featured .watch-card:first-child .card-photo { flex: 1; min-height: 590px; height: auto; }
-.home-featured .watch-card:first-child .card-body { padding: 30px; }
-.home-featured .watch-card:first-child h3 { min-height: 0; font: 400 32px/1.12 var(--serif); }
-.home-featured .watch-card:first-child .card-bottom strong { font-size: 23px; }
 .collection-tile { display: flex; flex-direction: column; justify-content: space-between; min-height: 360px; padding: 25px; border: 1px solid var(--line-strong); background: radial-gradient(circle at 90% 10%, #40301d, #20180f 60%, #15110c); transition: background var(--normal), transform var(--normal); }
 .collection-tile:hover { transform: translateY(-5px); background: #312317; }
 .collection-tile > span, .collection-tile small { color: var(--gold); font: 700 9px var(--sans); letter-spacing: .18em; }
@@ -430,8 +425,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .hero-art { min-height: 450px; padding: 35px 25px 60px; }
   .hero-art-caption { right: 25px; left: 25px; font-size: 8px; }
   .watch-grid, .related-section .watch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-featured .watch-card:first-child { grid-column: span 2; grid-row: auto; }
-  .home-featured .watch-card:first-child .card-photo { min-height: 440px; }
   .card-photo { height: 310px; }
   .catalog-content .watch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .catalog-content .card-photo { height: 270px; }
@@ -474,7 +467,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .section-head h2 { font-size: 48px; }
   .brand-feature { flex-basis: 255px; min-height: 200px; padding: 19px 12px 19px 0; }
   .brand-feature strong { font-size: 26px; }
-  .home-featured .watch-card:first-child .card-photo { min-height: 360px; }
   .collection-tile { min-height: 300px; }
   .card-photo { height: 275px; }
   .home-story .story-grid, .visit-grid { grid-template-columns: 1fr; gap: 50px; }
@@ -551,9 +543,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .stock-badge { top: 7px; left: 7px; font-size: 7px; }
   .brand-feature { min-height: 160px; }
   .brand-feature strong { font-size: 21px; }
-  .home-featured .watch-card:first-child .card-photo { min-height: 250px; }
-  .home-featured .watch-card:first-child .card-body { padding: 16px; }
-  .home-featured .watch-card:first-child h3 { font-size: 22px; }
   .collection-tile { min-height: 225px; padding: 15px; }
   .collection-tile strong { font-size: 30px; }
   .story-steps strong { font-size: 19px; }
@@ -601,10 +590,8 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .menu-button { width: 38px; height: 38px; }
   .catalog-content .watch-grid,
   .home-featured .watch-grid { grid-template-columns: 1fr; }
-  .home-featured .watch-card:first-child { grid-column: auto; }
   .catalog-content .card-photo,
   .home-featured .card-photo { height: 290px; }
-  .home-featured .watch-card:first-child .card-photo { min-height: 290px; }
   .catalog-content .card-body h3,
   .home-featured .card-body h3 { font-size: 19px; }
 }
@@ -850,11 +837,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .hero-mark { width: 100%; aspect-ratio: 1; border: 2px solid #d4af7080; box-shadow: 0 12px 45px #000b; }
 .hero-bottom { display: none; }
 .home-brands, .home-featured { background: #0c0b0a; }
-.home-featured .watch-card:first-child { grid-column: auto; grid-row: auto; display: block; }
-.home-featured .watch-card:first-child .card-photo { min-height: 0; height: 300px; }
-.home-featured .watch-card:first-child .card-body { padding: 15px; }
-.home-featured .watch-card:first-child h3 { font: 400 17px/1.25 var(--display); }
-.home-featured .watch-card:first-child .card-bottom strong { font-size: 17px; }
 .home-featured .watch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .home-featured .collection-tile { min-height: 300px; }
 .collection-banner { position: relative; min-height: 180px; display: grid; place-items: center; overflow: hidden; background: #0c0805 url('/hero-watch.png') center 44% / cover no-repeat; text-align: center; }
@@ -910,7 +892,7 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .watch-card:hover { border-color: var(--gold-muted); }
 .card-photo, .catalog-content .card-photo { height: 245px; background: #1a1714; }
 .card-photo > a > img { padding: 0; object-fit: cover; }
-.card-body, .home-featured .watch-card:first-child .card-body { padding: 13px; }
+.card-body { padding: 13px; }
 .card-brand { margin-bottom: 5px; color: #bda477; font-size: 9px; letter-spacing: .05em; }
 .card-body h3 { min-height: 0; color: #f4eee6; font: 400 15px/1.25 var(--display); }
 .card-spec { margin: 6px 0 0; font-size: 10px; }
@@ -972,8 +954,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .hero-promises > span { font-size: 20px; }
   .hero-promises small { font-size: 8px; }
   .home-featured .watch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-featured .watch-card:first-child { grid-column: auto; }
-  .home-featured .watch-card:first-child .card-photo { height: 265px; }
   .catalog-section .wrap { width: min(100% - 36px, 620px); }
   .catalog-content .watch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .catalog-content .card-photo { height: 230px; }
@@ -996,8 +976,8 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .collection-banner { min-height: 150px; }
   .collection-banner h1 { font-size: 39px; }
   .catalog-content .card-photo { height: 190px; }
-  .card-body, .home-featured .watch-card:first-child .card-body { padding: 11px; }
-  .card-body h3, .home-featured .watch-card:first-child h3 { min-height: 37px; font-size: 13px; }
+  .card-body { padding: 11px; }
+  .card-body h3 { min-height: 37px; font-size: 13px; }
   .card-brand { font-size: 8px; }
   .card-spec { display: none; }
   .card-bottom strong { font-size: 14px; }
@@ -1009,7 +989,7 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .header-search { display: none; }
   .hero h1 { font-size: 47px; letter-spacing: -.05em; }
   .catalog-content .watch-grid, .home-featured .watch-grid { grid-template-columns: 1fr; }
-  .catalog-content .card-photo, .home-featured .watch-card:first-child .card-photo { height: 280px; }
+  .catalog-content .card-photo { height: 280px; }
 }
 
 /* Layered showroom backgrounds */
