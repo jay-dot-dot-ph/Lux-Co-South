@@ -448,23 +448,22 @@ function detailPage() {
   const saved = favorites.has(watch.id);
   app.innerHTML = header('Collection') + `<main class="detail-main"><div class="wrap">
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/watches/">COLLECTION</a><span>/</span><a href="/watches/${esc(watch.brandSlug)}/">${esc(watch.brand)}</a><span>/</span><span>${esc(watch.id)}</span></nav>
-    <div class="detail-heading"><div><p class="eyebrow">${esc(watch.brand)} <span>·</span> ${esc(watch.id)}</p><h1>${esc(watch.model)}</h1></div>
-      <div class="detail-price"><strong>${money(watch.price)}</strong><span class="stock-pill ${watch.stock === 0 ? 'unavailable' : ''}"><i></i>${stock(watch)}</span></div>
-    </div>
     <div class="detail-grid">
+      <div class="detail-media"><div class="detail-photo" ${watch.image ? 'data-photo-zoom role="button" tabindex="0" aria-label="Zoom watch photo"' : ''}>${image(watch, { eager: true })}${watch.image ? '<span class="detail-zoom-hint" aria-hidden="true">Tap to zoom</span>' : ''}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
       <div class="detail-copy">
-      <div class="detail-info"><p class="eyebrow">ABOUT THIS PIECE</p>
+        <div class="detail-heading"><p class="eyebrow">${esc(watch.brand)} <span>·</span> ${esc(watch.id)}</p><h1>${esc(watch.model)}</h1></div>
+        <div class="detail-price"><strong>${money(watch.price)}</strong><span class="stock-pill ${watch.stock === 0 ? 'unavailable' : ''}"><i></i>${stock(watch)}</span></div>
+        <div class="detail-info"><p class="eyebrow">ABOUT THIS PIECE</p>
         <p class="detail-description">${esc(watch.description || 'Ask us for more details about this watch.')}</p>
         <div class="detail-actions"><button class="button button-primary" type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button>
           <button class="detail-heart ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove from' : 'Save to'} favorites" aria-pressed="${saved}">${icon.heart}</button></div>
         <div class="detail-extra"><button class="compare-add ${compare.has(watch.id) ? 'is-compared' : ''}" type="button" data-compare="${esc(watch.id)}" aria-pressed="${compare.has(watch.id)}">${compare.has(watch.id) ? '✓ Added to compare' : '+ Compare'}</button><button class="copy-link" type="button" data-share="${esc(watch.id)}">COPY LINK ${icon.arrow}</button></div>
+        </div>
+        <section class="spec-section"><h2 class="detail-spec-heading">DETAILS</h2>
+          <dl>${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl></section>
       </div>
-      <section class="spec-section">${sectionHead('01', 'THE DETAILS', 'The finer points.')}
-        <dl>${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl></section>
-      </div>
-      <div class="detail-media"><div class="detail-photo" ${watch.image ? 'data-photo-zoom role="button" tabindex="0" aria-label="Zoom watch photo"' : ''}>${image(watch, { eager: true })}${watch.image ? '<span class="detail-zoom-hint" aria-hidden="true">Tap to zoom</span>' : ''}</div><div class="detail-media-foot"><span>WATCH COLLECTION SOUTH</span><span>PIECE ${esc(watch.id)}</span></div></div>
     </div>
-    ${related.length ? `<section class="related-section">${sectionHead('02', 'CONTINUE EXPLORING', `More from ${esc(watch.brand)}.`, `/watches/${esc(watch.brandSlug)}/`, 'See all')}<div class="watch-grid">${related.map(card).join('')}</div></section>` : ''}
+    ${related.length ? `<section class="related-section">${sectionHead('01', 'CONTINUE EXPLORING', `More from ${esc(watch.brand)}.`, `/watches/${esc(watch.brandSlug)}/`, 'See all')}<div class="watch-grid">${related.map(card).join('')}</div></section>` : ''}
   </div></main><div class="mobile-inquiry"><span>${money(watch.price)}</span><button type="button" data-inquire="${esc(watch.id)}">INQUIRE ${icon.arrow}</button></div>` + footer();
   setupDetailZoom(watch);
 }
