@@ -137,7 +137,7 @@ function home() {
   app.innerHTML = header('Home') + `<main>
     <section class="hero"><div class="wrap hero-layout">
       <div class="hero-copy"><p class="eyebrow">TIMELESS STYLE</p>
-        <h1>WATCH<br>COLLECTION<br>SOUTH</h1>
+        <h1>Inspired By<br><em>Love and<br>Elegance</em></h1>
         <p class="hero-description">A curated collection of timepieces for everyday elegance.</p>
         <div class="hero-buttons"><a class="button button-primary" href="/watches/">EXPLORE COLLECTION ${icon.arrow}</a></div>
         <div class="hero-promises"><span>✧ <small>CURATED<br>SELECTION</small></span><span>◇ <small>INSPECT BEFORE<br>PAYING</small></span><span>⇢ <small>NATIONWIDE<br>DELIVERY</small></span></div>
