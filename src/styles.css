@@ -771,6 +771,9 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .bottom-nav a[aria-current] { background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold-light); }
   .bottom-nav svg { width: 19px; height: 19px; }
   .bottom-nav span { font: 700 10px var(--sans); }
+  .bottom-nav .bottom-saved-link { position: relative; }
+  .bottom-nav .bottom-saved-count { position: absolute; top: 3px; left: calc(50% + 5px); min-width: 16px; height: 16px; display: grid; place-items: center; padding-inline: 3px; border: 2px solid var(--surface); border-radius: 999px; background: var(--gold); color: #171009; font: 700 9px var(--sans); line-height: 1; }
+  .bottom-nav .bottom-saved-count:empty { display: none; }
   .chat-float { display: none; }
   .compare-dock { bottom: 84px; }
   body:has(.mobile-inquiry) .compare-dock { bottom: 161px; }

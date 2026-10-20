@@ -89,7 +89,7 @@ function header(active = '') {
   </div><nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation" hidden>
     <div class="mobile-menu-top"><span>THE COLLECTION</span><button type="button" data-menu aria-label="Close menu">${icon.close}</button></div>
     ${nav}<a class="mobile-menu-contact" href="${CONTACT.messenger}" target="_blank" rel="noopener">Inquire on Messenger ${icon.arrow}</a>
-  </nav></header><nav class="bottom-nav" aria-label="Quick navigation"><a href="/" ${active === 'Home' ? 'aria-current="page"' : ''}>⌂<span>Home</span></a><a href="/watches/" ${active === 'Collection' ? 'aria-current="page"' : ''}>${icon.grid}<span>Watches</span></a><a href="/favorites/" ${active === 'Saved' ? 'aria-current="page"' : ''}>${icon.heart}<span>Saved</span></a><button type="button" data-open-search>${icon.search}<span>Search</span></button></nav>`;
+  </nav></header><nav class="bottom-nav" aria-label="Quick navigation"><a href="/" ${active === 'Home' ? 'aria-current="page"' : ''}>⌂<span>Home</span></a><a href="/watches/" ${active === 'Collection' ? 'aria-current="page"' : ''}>${icon.grid}<span>Watches</span></a><a class="bottom-saved-link" href="/favorites/" aria-label="Saved watches, ${favorites.size} saved" ${active === 'Saved' ? 'aria-current="page"' : ''}>${icon.heart}<span>Saved</span><span class="bottom-saved-count">${favorites.size || ''}</span></a><button type="button" data-open-search>${icon.search}<span>Search</span></button></nav>`;
 }
 
 function footer() {
@@ -674,9 +674,10 @@ function updateFavoriteButtons() {
     button.setAttribute('aria-pressed', String(saved));
     button.setAttribute('aria-label', `${saved ? 'Remove' : 'Save'} ${watch ? name(watch) : 'watch'} ${saved ? 'from' : 'to'} favorites`);
   });
-  document.querySelectorAll('.saved-count, .nav-count').forEach(element => {
+  document.querySelectorAll('.saved-count, .nav-count, .bottom-saved-count').forEach(element => {
     element.textContent = favorites.size || '';
   });
+  document.querySelector('.bottom-saved-link')?.setAttribute('aria-label', `Saved watches, ${favorites.size} saved`);
 }
 
 function closeFilters() {
