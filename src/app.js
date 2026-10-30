@@ -99,7 +99,7 @@ function footer() {
     <div class="footer-column"><h3>Connect</h3><a href="${CONTACT.messenger}" target="_blank" rel="noopener">Messenger</a><a href="${CONTACT.facebook}" target="_blank" rel="noopener">Facebook</a><a href="tel:${CONTACT.phone}">${CONTACT.displayPhone}</a></div>
     <div class="footer-column"><h3>Visit us</h3><p>Forbes Commercial<br>Sampaloc, Manila</p><a href="${CONTACT.map}" target="_blank" rel="noopener">Get directions ${icon.arrow}</a></div>
   </div><div class="wrap footer-bottom"><span>© ${new Date().getFullYear()} Watch Collection South</span><span>Prices and availability are subject to confirmation.</span></div></footer>
-  <a class="chat-float" href="${CONTACT.messenger}" target="_blank" rel="noopener" aria-label="Chat on Messenger"><span>MESSAGE US</span>${icon.arrow}</a><div id="compare-dock"></div>`;
+  <div id="compare-dock"></div>`;
 }
 
 function card(watch) {
@@ -652,17 +652,9 @@ function inquiry(watches) {
 }
 
 async function handleInquiry(button, watches) {
-  if (button.dataset.copied === 'yes') { window.open(CONTACT.messenger, '_blank', 'noopener'); return; }
   if (!watches.length) return toast('Select at least one watch first.');
-  if (await copyText(inquiry(watches))) {
-    button.dataset.copied = 'yes';
-    if (button.classList.contains('card-inquire')) {
-      button.classList.add('is-copied');
-      button.setAttribute('aria-label', 'Open Messenger to send inquiry');
-      button.title = 'Open Messenger';
-    } else button.innerHTML = `MESSAGE COPIED · OPEN MESSENGER ${icon.arrow}`;
-    toast('Message copied. Open Messenger and paste it.');
-  } else toast('Could not copy the message. Please check clipboard permission.');
+  const { openChat } = await import('/chat/customer.js');
+  openChat(watches[0], watches.length > 1 ? inquiry(watches).replaceAll('Graceful Gifts Manila', 'Lux Co South') : '');
 }
 
 function updateFavoriteButtons() {
@@ -857,6 +849,7 @@ function render() {
 }
 
 setTheme(document.documentElement.dataset.theme || 'dark', false);
+import('/chat/customer.js').catch(() => {});
 fetch('/api/catalog.json')
   .then(response => { if (!response.ok) throw new Error(`Catalog HTTP ${response.status}`); return response.json(); })
   .then(data => { catalog = data; render(); })

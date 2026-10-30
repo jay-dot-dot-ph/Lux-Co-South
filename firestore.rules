@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null; }
+    function guest() { return signed() && request.auth.token.firebase.sign_in_provider == 'anonymous'; }
+    function staffPath() { return /databases/$(database)/documents/luxStaff/$(request.auth.uid); }
+    function staff() { return signed() && request.auth.token.firebase.sign_in_provider == 'password' && exists(staffPath()) && get(staffPath()).data.active == true && get(staffPath()).data.role in ['owner', 'admin', 'staff']; }
+    function manager() { return staff() && get(staffPath()).data.role in ['owner', 'admin']; }
+    function owner() { return staff() && get(staffPath()).data.role == 'owner'; }
+    function blocked(id) { return exists(/databases/$(database)/documents/luxBlockedCustomers/$(id)); }
+    function mine(id) { return guest() && request.auth.uid == id && !blocked(id); }
+    function handles(data) { return manager() || (staff() && data.get('assignedStaffUid', null) == request.auth.uid); }
+    function conv(id) { return /databases/$(database)/documents/luxConversations/$(id); }
+    function msg(id, mid) { return /databases/$(database)/documents/luxConversations/$(id)/messages/$(mid); }
+    function validProduct(p) {
+      return p == null || (p is map && p.keys().hasAll(['id', 'name', 'brand', 'image', 'price', 'stock', 'size', 'movement', 'category', 'dialColor', 'description']) && p.keys().hasOnly(['id', 'name', 'brand', 'image', 'price', 'stock', 'size', 'movement', 'category', 'dialColor', 'description'])
+        && p.id is string && p.id.matches('^[A-Za-z0-9-]{2,30}$')
+        && p.name is string && p.name.size() <= 120 && p.brand is string && p.brand.size() <= 80
+        && p.image is string && (p.image == '' || p.image.matches('^/images/[A-Za-z0-9._-]+$'))
+        && (p.price == null || (p.price is number && p.price >= 0 && p.price <= 1000000000))
+        && (p.stock == null || (p.stock is int && p.stock >= 0 && p.stock <= 1000000))
+        && p.size is string && p.size.size() <= 40 && p.movement is string && p.movement.size() <= 80
+        && p.category is string && p.category.size() <= 80 && p.dialColor is string && p.dialColor.size() <= 80
+        && p.description is string && p.description.size() <= 500);
+    }
+    function validSummary(id, data) {
+      return data.lastMessageId is string && data.lastMessageId.matches('^[A-Za-z0-9]{20}$')
+        && data.lastMessage is string && data.lastMessage.size() > 0 && data.lastMessage.size() <= 2000
+        && data.lastMessageAt == request.time && data.updatedAt == request.time
+        && data.lastSenderRole in ['customer', 'admin']
+        && getAfter(msg(id, data.lastMessageId)).data.text == data.lastMessage
+        && getAfter(msg(id, data.lastMessageId)).data.senderRole == data.lastSenderRole;
+    }
+    match /luxConversations/{id} {
+      allow get: if mine(id) || handles(resource.data);
+      allow list: if handles(resource.data);
+      allow create: if mine(id) && request.resource.data.keys().hasOnly(['customerUid','createdAt','updatedAt','customerDeliveredAt','customerSeenAt','adminDeliveredAt','adminSeenAt','adminUnreadCount','customerUnreadCount','lastMessageId','lastMessage','lastMessageAt','lastSenderRole','status','assignedStaffUid'])
+        && request.resource.data.customerUid == id && request.resource.data.createdAt == request.time
+        && request.resource.data.status == 'new' && request.resource.data.assignedStaffUid == null
+        && request.resource.data.customerDeliveredAt == request.time && request.resource.data.customerSeenAt == request.time
+        && request.resource.data.adminDeliveredAt == null && request.resource.data.adminSeenAt == null
+        && request.resource.data.adminUnreadCount == 1 && request.resource.data.customerUnreadCount == 0
+        && request.resource.data.lastSenderRole == 'customer' && validSummary(id, request.resource.data);
+      allow update: if (
+        mine(id) && resource.data.customerUid == id && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageId','lastMessage','lastMessageAt','lastSenderRole','updatedAt','adminUnreadCount'])
+          && request.resource.data.lastMessageId != resource.data.lastMessageId && request.resource.data.lastSenderRole == 'customer'
+          && request.resource.data.adminUnreadCount == resource.data.adminUnreadCount + 1
+          && (resource.data.lastSenderRole != 'customer' || resource.data.lastMessageAt + duration.value(3, 's') <= request.time) && validSummary(id, request.resource.data)
+      ) || (
+        handles(resource.data) && !blocked(id) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageId','lastMessage','lastMessageAt','lastSenderRole','updatedAt','customerUnreadCount'])
+          && request.resource.data.lastMessageId != resource.data.lastMessageId && request.resource.data.lastSenderRole == 'admin'
+          && request.resource.data.customerUnreadCount == resource.data.customerUnreadCount + 1
+          && validSummary(id, request.resource.data)
+      ) || (
+        mine(id) && resource.data.lastSenderRole == 'admin' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['customerDeliveredAt','customerSeenAt','customerUnreadCount'])
+          && request.resource.data.customerDeliveredAt == request.time && (request.resource.data.customerSeenAt == resource.data.customerSeenAt && request.resource.data.customerUnreadCount == resource.data.customerUnreadCount || request.resource.data.customerSeenAt == request.time && request.resource.data.customerUnreadCount == 0)
+      ) || (
+        handles(resource.data) && resource.data.lastSenderRole == 'customer' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['adminDeliveredAt','adminSeenAt','adminUnreadCount'])
+          && request.resource.data.adminDeliveredAt == request.time && (request.resource.data.adminSeenAt == resource.data.adminSeenAt && request.resource.data.adminUnreadCount == resource.data.adminUnreadCount || request.resource.data.adminSeenAt == request.time && request.resource.data.adminUnreadCount == 0)
+      ) || (
+        handles(resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['new','open','pending','resolved'] && request.resource.data.status != resource.data.get('status', 'new')
+      ) || (
+        manager() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedStaffUid'])
+          && request.resource.data.assignedStaffUid != resource.data.get('assignedStaffUid', null)
+          && (request.resource.data.assignedStaffUid == null || (exists(/databases/$(database)/documents/luxStaff/$(request.resource.data.assignedStaffUid)) && get(/databases/$(database)/documents/luxStaff/$(request.resource.data.assignedStaffUid)).data.active == true))
+      );
+      allow delete: if owner() && blocked(id);
+      match /messages/{mid} {
+        allow get, list: if mine(id) || (staff() && handles(get(conv(id)).data));
+        allow create: if (mine(id) && request.resource.data.senderRole == 'customer' && request.resource.data.senderUid == id || !blocked(id) && handles(get(conv(id)).data) && request.resource.data.senderRole == 'admin' && request.resource.data.senderUid == request.auth.uid)
+          && request.resource.data.keys().hasOnly(['senderUid','senderRole','text','product','createdAt'])
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
+          && request.resource.data.createdAt == request.time && validProduct(request.resource.data.product)
+          && getAfter(conv(id)).data.lastMessageId == mid
+          && getAfter(conv(id)).data.lastMessage == request.resource.data.text
+          && getAfter(conv(id)).data.lastMessageAt == request.time;
+        allow update: if false;
+        allow delete: if owner() && blocked(id);
+      }
+    }
+    match /luxStaff/{uid} {
+      allow get: if signed() && request.auth.uid == uid || manager();
+      allow list: if manager();
+      allow create: if owner() && uid != request.auth.uid && request.resource.data.keys().hasOnly(['displayName','email','role','active','createdAt','createdBy'])
+        && request.resource.data.displayName is string && request.resource.data.displayName.size() > 0 && request.resource.data.displayName.size() <= 80
+        && request.resource.data.email is string && request.resource.data.email.size() <= 254 && request.resource.data.role in ['admin','staff']
+        && request.resource.data.active == true && request.resource.data.createdAt == request.time && request.resource.data.createdBy == request.auth.uid;
+      allow update: if owner() && uid != request.auth.uid && resource.data.role != 'owner'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role','active'])
+        && request.resource.data.role in ['admin','staff'] && request.resource.data.active is bool;
+      allow delete: if false;
+    }
+    match /luxBlockedCustomers/{uid} {
+      allow get: if manager() || (staff() && exists(conv(uid)) && handles(get(conv(uid)).data));
+      allow list: if false;
+      allow create: if manager() && exists(conv(uid)) && request.resource.data.keys().hasOnly(['blockedAt','blockedBy'])
+        && request.resource.data.blockedAt == request.time && request.resource.data.blockedBy == request.auth.uid;
+      allow update: if false;
+      allow delete: if manager();
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

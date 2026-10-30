@@ -161,7 +161,11 @@ const catalog = {
   watches: watches.map(({ imageSource, ...watch }) => watch), brands
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
-for (const file of ['app.js', 'styles.css', 'logo.jpg', 'hero-watch.png', 'collection-banner.png', 'marble-background.png', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
+for (const file of ['app.js', 'styles.css', 'chat.css', 'admin.css', 'logo.jpg', 'hero-watch.png', 'collection-banner.png', 'marble-background.png', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
+mkdirSync(join(dist, 'chat'), { recursive: true });
+for (const file of ['firebase.js', 'customer.js', 'admin.js']) copyFileSync(join(root, 'src', 'chat', file), join(dist, 'chat', file));
+mkdirSync(join(dist, 'admin'), { recursive: true });
+copyFileSync(join(root, 'src', 'admin', 'index.html'), join(dist, 'admin', 'index.html'));
 const assetVersion = createHash('sha256')
   .update(readFileSync(join(root, 'src', 'app.js')))
   .update(readFileSync(join(root, 'src', 'styles.css')))
