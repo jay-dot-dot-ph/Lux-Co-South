@@ -1,6 +1,6 @@
 # Lux Co South admin chat
 
-This implementation is local. It has not been deployed as part of the admin parity change.
+Deployed to https://lux-co-south.web.app/admin/ on 2026-10-30. Firestore rules, the staff assignment index, and Hosting were deployed from the nested Lux Co South repository. The existing catalog build was retained because the Sheet export returned an empty CHARRIOL tab during the fresh build attempt.
 
 ## Roles
 
@@ -18,9 +18,9 @@ Blocking writes `luxBlockedCustomers/{guestUid}`. Rules then deny that guest acc
 
 Start the Authentication and Firestore emulators with project `demo-lux-co-south`, then serve `dist` at `http://127.0.0.1:4173` with an emulator-only `dist/firebase-config.json`. Run `npm run test:chat-rules` and `npm run test:admin-parity`. Remove the emulator config from `dist` afterward. Tests create and delete data only in emulators.
 
-## When deployment is authorized
+## Future deployments
 
-Build the production site from the Sheet, then deploy the updated Firestore rules, composite index, and Hosting from this nested repository. Do not include an emulator config in the Hosting build. The current Sheet export has intermittently returned empty brand CSVs, so a full build must pass before a future deployment. Firebase indexes can take time to build before staff inbox queries work.
+Build the production site from the Sheet, then deploy from this nested repository. Do not include an emulator config in the Hosting build. The current Sheet export has intermittently returned empty brand CSVs, so a full catalog build must pass before publishing new catalog data. Firebase indexes can take time to build before staff inbox queries work.
 
 ## Reference differences
 
