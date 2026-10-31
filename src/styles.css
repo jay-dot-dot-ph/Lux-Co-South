@@ -824,7 +824,7 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .header-actions .saved-link { color: var(--gold-light); }
 .header-actions .saved-count { top: -3px; right: -4px; min-width: 17px; min-height: 17px; display: grid; place-items: center; border-radius: 50%; background: var(--gold); color: #171009; font-size: 10px; }
 .header-actions .saved-count:empty { display: none; }
-.hero { min-height: 620px; position: relative; background: #080706 url('/hero-watch.png') center center / cover no-repeat; }
+.hero { min-height: 620px; position: relative; background: #080706; }
 .hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #050504ea 0%, #070605bd 29%, #0907053b 55%, #05040318 100%); pointer-events: none; }
 .hero-layout { position: relative; z-index: 1; display: flex; align-items: center; min-height: 580px; padding-block: 72px 84px; }
 .hero-copy { max-width: 540px; }
@@ -843,7 +843,7 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .home-brands, .home-featured { background: #0c0b0a; }
 .home-featured .watch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .home-featured .collection-tile { min-height: 300px; }
-.collection-banner { position: relative; min-height: 180px; display: grid; place-items: center; overflow: hidden; background: #0c0805 url('/hero-watch.png') center 44% / cover no-repeat; text-align: center; }
+.collection-banner { position: relative; min-height: 180px; display: grid; place-items: center; overflow: hidden; background: #0c0805; text-align: center; }
 .collection-banner::before { content: ''; position: absolute; inset: 0; background: #050403aa; }
 .collection-banner .wrap { position: relative; z-index: 1; padding: 30px 0; }
 .collection-banner .eyebrow { margin-bottom: 4px; color: #d4af70; font-size: 9px; letter-spacing: .27em; }
@@ -1002,8 +1002,6 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .hero-layout { z-index: 2; }
 .collection-banner {
   min-height: 210px;
-  background-image: url('/collection-banner.png');
-  background-position: center 48%;
 }
 .collection-banner::before { background: linear-gradient(90deg, #05040480, #0504043d 28%, #05040475 52%, #0504043d 72%, #05040480); }
 .collection-banner .wrap { padding-block: 42px; }
@@ -1119,9 +1117,9 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .home-featured .collection-tile { grid-column: auto; }
 }
 
-/* Keep the photo and its text legible in both themes. */
+/* Keep the hero text legible in both themes. */
 :root[data-theme="light"] .hero {
-  background: #080706 url('/hero-watch.png') center center / cover no-repeat;
+  background: #080706;
 }
 :root[data-theme="light"] .hero h1 { color: #fff8ed; }
 :root[data-theme="light"] .hero-copy > .eyebrow { color: #edc77d; }

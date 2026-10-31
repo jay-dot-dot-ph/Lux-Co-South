@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex').slice(0, 12);
-const backgrounds = ['hero-watch.png', 'collection-banner.png', 'marble-background.png'];
+const backgrounds = ['marble-background.png'];
 const escaped = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const replacePath = (html, oldPath, newPath) => {
   const split = oldPath.lastIndexOf('.');
