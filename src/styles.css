@@ -1245,3 +1245,21 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
   .contact-main .contact-methods { grid-template-columns: 1fr; }
   .contact-main .contact-methods > a { min-height: 92px; }
 }
+
+/* Match the Home and Collection backdrops to the other themed pages. */
+.hero, .collection-banner { background: #0d0b09; }
+.hero::before, .collection-banner::before { background: none; }
+.collection-banner h1 { color: var(--text); text-shadow: none; }
+.collection-banner .eyebrow { color: var(--gold); }
+.collection-banner p:last-child { color: var(--text-soft); }
+:root[data-theme="light"] .hero,
+:root[data-theme="light"] .collection-banner {
+  background: radial-gradient(ellipse at 80% 0, #ddc8a8, transparent 55%), #f5eee4;
+}
+:root[data-theme="light"] .hero::after { background: none; }
+:root[data-theme="light"] .hero h1 { color: var(--text); }
+:root[data-theme="light"] .hero h1 em { color: var(--gold); }
+:root[data-theme="light"] .hero-copy > .eyebrow,
+:root[data-theme="light"] .hero-promises > span { color: var(--gold); }
+:root[data-theme="light"] .hero-promises small { color: var(--text-soft); }
+:root[data-theme="light"] .collection-banner p:last-child { color: var(--text-soft); }
