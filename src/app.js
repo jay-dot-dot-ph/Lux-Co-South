@@ -133,7 +133,7 @@ function home() {
     if (preview.length >= 8) break;
     if (watch.image && !preview.some(item => item.id === watch.id)) preview.push(watch);
   }
-  const featuredBrands = [...catalog.brands].sort((a, b) => b.count - a.count).slice(0, 6);
+  const featuredBrands = [...catalog.brands].filter(brand => brand.count > 0).sort((a, b) => b.count - a.count).slice(0, 6);
   app.innerHTML = header('Home') + `<main>
     <section class="hero"><div class="wrap hero-layout">
       <div class="hero-copy">
@@ -146,10 +146,10 @@ function home() {
       <div class="hero-bottom"><div class="wrap"><span>${catalog.watches.length.toLocaleString()} WATCHES <i></i> ${catalog.brands.length} BRANDS</span></div></div>
     </section>
     <section class="home-brands section-pad"><div class="wrap">${sectionHead('', 'BRANDS', 'Shop by brand.', '/brands/', 'All brands')}
-      <div class="brand-feature-grid">${featuredBrands.map((brand, index) => `<a class="brand-feature" href="${brandLink(brand)}"><span class="brand-feature-top"><small>${String(index + 1).padStart(2, '0')}</small><span>${icon.arrow}</span></span><strong>${esc(brand.name)}</strong><span class="brand-feature-count">${brand.count} WATCHES</span></a>`).join('')}</div>
+      <div class="brand-feature-grid">${featuredBrands.map((brand, index) => `<a class="brand-feature" href="${brandLink(brand)}"><span class="brand-feature-top"><small>${String(index + 1).padStart(2, '0')}</small><span>${icon.arrow}</span></span><strong>${esc(brand.name)}</strong><span class="brand-feature-count">${brand.count} WATCHES</span></a>`).join('') || '<p>Our watch collection is coming soon.</p>'}</div>
     </div></section>
     <section class="home-featured section-pad"><div class="wrap">${sectionHead('02', 'FEATURED', 'Explore the collection.', '/watches/', 'View all')}
-      <div class="watch-grid">${preview.map(watch => card(watch)).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>
+      ${preview.length ? `<div class="watch-grid">${preview.map(watch => card(watch)).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>` : '<p>Watch listings are coming soon.</p>'}
     </div></section>
     <section class="visit-section" id="about"><div class="wrap visit-grid">
       <div><p class="eyebrow">VISIT US</p><h2>See it<br><em>in person.</em></h2><p>Forbes Commercial, Sampaloc, Manila. Ask us to confirm availability before visiting.</p>
@@ -161,7 +161,7 @@ function home() {
 
 const options = (values, label) => `<option value="">${label}</option>${[...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b)).map(value => `<option value="${esc(value)}">${esc(value)}</option>`).join('')}`;
 function filterPanel() {
-  const ceiling = Math.ceil(Math.max(...catalog.watches.map(watch => watch.price || 0)) / 1000) * 1000;
+  const ceiling = Math.ceil(Math.max(1000, ...catalog.watches.map(watch => watch.price || 0)) / 1000) * 1000;
   const categories = ['CHRONOGRAPH', 'DRESS', 'DIVER', 'SKELETON'];
   const colors = [['Black', '#121212'], ['White', '#f4eee5'], ['Blue', '#244d86'], ['Green', '#1d6846'], ['Gold', '#bd8b48'], ['Pink', '#d99aa0']];
   const choice = (key, value, label) => `<button class="filter-choice ${filters[key] === value ? 'selected' : ''}" type="button" data-filter-choice="${key}" data-value="${esc(value)}" aria-pressed="${filters[key] === value}"><span class="choice-box" aria-hidden="true"></span>${label}</button>`;
@@ -237,7 +237,9 @@ function renderResults() {
   document.getElementById('active-filters').innerHTML = active.map(([key, label]) =>
     `<button type="button" class="filter-chip" data-remove-filter="${key}" aria-label="Remove ${label.toLowerCase()} filter">${label}: ${esc(key === 'min' || key === 'max' ? money(filters[key]) : filters[key])} ${icon.close}</button>`
   ).join('');
-  document.getElementById('results').innerHTML = rows.length
+  document.getElementById('results').innerHTML = !catalog.watches.length
+    ? '<div class="empty-state"><span class="empty-symbol">✧</span><p class="eyebrow">COMING SOON</p><h2>No watches listed yet.</h2><p>Our collection will appear here soon.</p></div>'
+    : rows.length
     ? `<div class="watch-grid ${catalogView === 'list' ? 'list-view' : ''}">${rows.slice(0, shown).map(card).join('')}</div>${rows.length > shown ? `<div class="load-more"><span>${Math.min(shown, rows.length)} OF ${rows.length}</span><button class="button button-outline" type="button" data-more>SHOW MORE ${icon.arrow}</button></div>` : ''}`
     : `<div class="empty-state"><span class="empty-symbol">✧</span><p class="eyebrow">NO MATCHES FOUND</p><h2>Nothing in this edit—yet.</h2><p>Try another search or start again with all watches.</p><button class="button button-outline" type="button" data-clear>RESET FILTERS ${icon.arrow}</button></div>`;
 }

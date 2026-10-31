@@ -8,7 +8,6 @@ const dist = resolve(import.meta.dirname, '..', 'dist');
 const catalog = JSON.parse(readFileSync(join(dist, 'api', 'catalog.json'), 'utf8'));
 const report = JSON.parse(readFileSync(join(dist, 'api', 'image-pipeline-report.json'), 'utf8'));
 assert.equal(catalog.brands.length, 23);
-assert(catalog.watches.length > 100, 'Catalog appears incomplete');
 assert.equal(catalog.brands.reduce((sum, brand) => sum + brand.count, 0), catalog.watches.length);
 assert.equal(new Set(catalog.watches.map(w => w.id)).size, catalog.watches.length);
 assert.equal(report.settings.thumbnail.size, 480);

@@ -19,7 +19,6 @@ let unavailable = false;
 if (mode === 'source') {
   const live = await (await get(`${origin}/api/catalog.json?sync-check=${Date.now()}`)).json();
   const csvs = new Array(TABS.length);
-  const empty = [];
   let next = 0;
   try {
     await Promise.all(Array.from({ length: 4 }, async () => {
@@ -30,8 +29,7 @@ if (mode === 'source') {
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
             csv = await (await get(`${base}/export?format=csv&gid=${gid}`)).text();
-            const rows = parseProducts(csv, tab, label);
-            if (!rows.length) empty.push(tab);
+            parseProducts(csv, tab, label);
             last = null;
             break;
           } catch (error) {
@@ -43,7 +41,6 @@ if (mode === 'source') {
         csvs[index] = [gid, csv];
       }
     }));
-    if (empty.length === TABS.length) throw new Error('Every Sheet tab is empty');
     const fingerprint = createHash('sha256');
     for (const [gid, csv] of csvs) fingerprint.update(`${gid}\n${csv}\n`);
     changed = ['push', 'workflow_dispatch'].includes(process.env.GITHUB_EVENT_NAME) || fingerprint.digest('hex') !== live.sourceFingerprint;
@@ -51,7 +48,6 @@ if (mode === 'source') {
       mkdirSync(snapshot, { recursive: true });
       for (const [gid, csv] of csvs) writeFileSync(join(snapshot, `${gid}.csv`), csv);
     }
-    if (empty.length) console.warn(`Empty Sheet tabs will retain their live watches: ${empty.join(', ')}`);
   } catch (error) {
     changed = false;
     unavailable = true;
