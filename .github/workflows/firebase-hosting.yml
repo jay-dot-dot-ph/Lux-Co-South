@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '8-58/5 * * * *'
-    - cron: '4 * * * *'
+    - cron: '8,38 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -26,17 +25,24 @@ jobs:
           node-version: '22'
       - name: Check whether the public Sheet changed
         id: source_check
-        if: github.event_name == 'schedule' && github.event.schedule != '4 * * * *'
         run: node scripts/check-sheet-sync.mjs
+      - name: Install build dependencies
+        if: steps.source_check.outputs.changed == 'true'
+        run: npm ci
       - name: Build catalog and photos
-        if: github.event_name != 'schedule' || steps.source_check.outputs.changed == 'true'
+        if: steps.source_check.outputs.changed == 'true'
         run: npm run build
+        env:
+          LUX_SHEET_SNAPSHOT: '1'
       - name: Validate catalog and product pages
-        if: github.event_name != 'schedule' || steps.source_check.outputs.changed == 'true'
+        if: steps.source_check.outputs.changed == 'true'
         run: npm run check
+      - name: Validate optimized artifact and images
+        if: steps.source_check.outputs.changed == 'true'
+        run: npm run check:optimization
       - name: Check whether the built site changed
         id: artifact_check
-        if: github.event_name != 'schedule' || github.event.schedule == '4 * * * *' || steps.source_check.outputs.changed == 'true'
+        if: steps.source_check.outputs.changed == 'true'
         run: node scripts/check-sheet-sync.mjs artifact
       - name: Limit Hosting release retention
         id: retention

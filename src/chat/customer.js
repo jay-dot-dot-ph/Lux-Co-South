@@ -9,7 +9,7 @@ let moreMessages = true;
 let prefill = '';
 let acknowledging = false;
 const acknowledgements = new Set();
-const watchHtml = watch => watch ? `<div class="lux-product">${watch.image ? `<img src="${escapeHtml(watch.image)}" alt="">` : '<span>✦</span>'}<div><strong>${escapeHtml(watch.brand)} ${escapeHtml(watch.name)}</strong><small>Watch ID ${escapeHtml(watch.id)} · ${watch.price == null ? 'Price on request' : `₱${Number(watch.price).toLocaleString('en-PH')}`}</small><small>${watch.stock === 0 ? 'Sold out' : watch.stock == null ? 'Availability on request' : `${watch.stock} available`}${watch.size ? ` · ${escapeHtml(watch.size)}` : ''}${watch.movement ? ` · ${escapeHtml(watch.movement)}` : ''}</small></div></div>` : '';
+const watchHtml = watch => watch ? `<div class="lux-product">${watch.image ? `<img src="${escapeHtml(watch.thumbnailImage || watch.image)}" alt="" loading="lazy" decoding="async">` : '<span>✦</span>'}<div><strong>${escapeHtml(watch.brand)} ${escapeHtml(watch.name)}</strong><small>Watch ID ${escapeHtml(watch.id)} · ${watch.price == null ? 'Price on request' : `₱${Number(watch.price).toLocaleString('en-PH')}`}</small><small>${watch.stock === 0 ? 'Sold out' : watch.stock == null ? 'Availability on request' : `${watch.stock} available`}${watch.size ? ` · ${escapeHtml(watch.size)}` : ''}${watch.movement ? ` · ${escapeHtml(watch.movement)}` : ''}</small></div></div>` : '';
 
 function paint() {
   const draft = root.querySelector('#lux-message')?.value || '';

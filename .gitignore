@@ -1,6 +1,8 @@
 node_modules/
 .cache/
 dist/
+.dist-next/
+.dist-previous/
 .openai/
 .firebase/
 firebase-debug.log

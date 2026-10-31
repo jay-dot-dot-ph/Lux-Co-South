@@ -65,9 +65,9 @@ function setTheme(theme, persist = true) {
   if (persist) try { localStorage.setItem('lux-theme', theme); } catch {}
 }
 
-function image(watch, { eager = false } = {}) {
+function image(watch, { eager = false, thumbnail = !eager } = {}) {
   return watch?.image
-    ? `<img src="${esc(watch.image)}" alt="${esc(name(watch))}" loading="${eager ? 'eager' : 'lazy'}" decoding="async">`
+    ? `<img src="${esc(thumbnail ? (watch.thumbnailImage || watch.image) : watch.image)}" alt="${esc(name(watch))}" loading="${eager ? 'eager' : 'lazy'}" ${eager ? 'fetchpriority="high"' : ''} decoding="async">`
     : '<div class="watch-placeholder"><img src="/logo.jpg" alt=""><span>Photography coming soon</span></div>';
 }
 
@@ -102,10 +102,10 @@ function footer() {
   <div id="compare-dock"></div>`;
 }
 
-function card(watch) {
+function card(watch, index = 99) {
   const saved = favorites.has(watch.id);
   return `<article class="watch-card">
-    <div class="card-photo"><a href="${link(watch)}" aria-label="View ${esc(name(watch))}">${image(watch)}</a>
+    <div class="card-photo"><a href="${link(watch)}" aria-label="View ${esc(name(watch))}">${image(watch, { eager: index < 4, thumbnail: true })}</a>
       <button class="heart-button ${saved ? 'is-saved' : ''}" type="button" data-favorite="${esc(watch.id)}" aria-label="${saved ? 'Remove' : 'Save'} ${esc(name(watch))} ${saved ? 'from' : 'to'} favorites" aria-pressed="${saved}">${icon.heart}</button>
       ${watch.stock === 0 ? '<span class="stock-badge">SOLD OUT</span>' : ''}
       <button class="card-view" type="button" data-quick-view="${esc(watch.id)}" aria-label="Quick view ${esc(name(watch))}">QUICK VIEW ${icon.arrow}</button>
@@ -149,7 +149,7 @@ function home() {
       <div class="brand-feature-grid">${featuredBrands.map((brand, index) => `<a class="brand-feature" href="${brandLink(brand)}"><span class="brand-feature-top"><small>${String(index + 1).padStart(2, '0')}</small><span>${icon.arrow}</span></span><strong>${esc(brand.name)}</strong><span class="brand-feature-count">${brand.count} WATCHES</span></a>`).join('')}</div>
     </div></section>
     <section class="home-featured section-pad"><div class="wrap">${sectionHead('02', 'FEATURED', 'Explore the collection.', '/watches/', 'View all')}
-      <div class="watch-grid">${preview.map(card).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>
+      <div class="watch-grid">${preview.map(watch => card(watch)).join('')}<a class="collection-tile" href="/watches/"><span>THE FULL COLLECTION</span><strong>Find your next<br><em>favorite.</em></strong><small>EXPLORE ALL ${catalog.watches.length} WATCHES ${icon.arrow}</small></a></div>
     </div></section>
     <section class="visit-section" id="about"><div class="wrap visit-grid">
       <div><p class="eyebrow">VISIT US</p><h2>See it<br><em>in person.</em></h2><p>Forbes Commercial, Sampaloc, Manila. Ask us to confirm availability before visiting.</p>
@@ -653,8 +653,35 @@ function inquiry(watches) {
 
 async function handleInquiry(button, watches) {
   if (!watches.length) return toast('Select at least one watch first.');
-  const { openChat } = await import('/chat/customer.js');
+  const { openChat } = await loadChat();
   openChat(watches[0], watches.length > 1 ? inquiry(watches).replaceAll('Graceful Gifts Manila', 'Lux Co South') : '');
+}
+
+let chatLoad;
+function loadChat() {
+  return chatLoad ||= import('/chat/customer.js').then(module => {
+    document.getElementById('lux-chat-lazy-root')?.remove();
+    return module;
+  }).catch(error => { chatLoad = null; throw error; });
+}
+function setupChatLauncher() {
+  let used = false;
+  try { used = localStorage.getItem('lux-chat-used') === '1'; } catch {}
+  if (used) { loadChat().catch(() => {}); return; }
+  const button = document.createElement('button');
+  button.id = 'lux-chat-lazy-launch';
+  button.className = 'lux-chat-launch';
+  button.type = 'button';
+  button.setAttribute('aria-label', 'Open Lux Co South chat');
+  button.textContent = 'Chat with us';
+  button.addEventListener('click', async () => {
+    try { (await loadChat()).openChat(); }
+    catch { button.hidden = false; button.textContent = 'Chat unavailable. Retry'; }
+  });
+  const wrapper = document.createElement('div');
+  wrapper.id = 'lux-chat-lazy-root';
+  wrapper.append(button);
+  document.body.append(wrapper);
 }
 
 function updateFavoriteButtons() {
@@ -849,7 +876,7 @@ function render() {
 }
 
 setTheme(document.documentElement.dataset.theme || 'dark', false);
-import('/chat/customer.js').catch(() => {});
+setupChatLauncher();
 fetch('/api/catalog.json')
   .then(response => { if (!response.ok) throw new Error(`Catalog HTTP ${response.status}`); return response.json(); })
   .then(data => { catalog = data; render(); })

@@ -5,12 +5,17 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs",
+    "check:optimization": "node scripts/optimization-qa.mjs",
+    "benchmark:network": "node scripts/network-benchmark.mjs .cache/network-after.json",
+    "report:optimization": "node scripts/report-optimization.mjs",
+    "review:image-quality": "node scripts/image-quality-review.mjs",
     "test:chat-rules": "node scripts/chat-rules.mjs",
     "test:admin-parity": "node scripts/admin-parity-browser.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
     "firebase": "^11.10.0",
-    "playwright-core": "^1.64.0"
+    "playwright-core": "^1.64.0",
+    "sharp": "^0.34.4"
   }
 }

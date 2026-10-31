@@ -1,15 +1,20 @@
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SHEET_ID, TABS, parseCsv, parseProducts, parseImagePage, slug } from './sheet.mjs';
 import { extractWorkbookImages } from './xlsx-images.mjs';
+import { optimizeWatchImages } from './optimize-images.mjs';
+import { prepareAssets } from './prepare-assets.mjs';
+import { publishStage } from './publish-stage.mjs';
+import { writeSiteFingerprint } from './site-fingerprint.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const dist = join(root, 'dist');
+const dist = join(root, '.dist-next');
 const cache = join(root, '.cache', 'images');
 const embeddedCache = join(root, '.cache', 'embedded');
 const base = `https://docs.google.com/spreadsheets/d/${SHEET_ID}`;
+const sheetSnapshot = join(root, '.cache', 'sheet-snapshot');
 const origin = 'https://lux-co-south.web.app';
 
 async function get(url, label, timeout = 60000) {
@@ -37,7 +42,9 @@ async function pool(items, limit, task) {
 }
 
 const brandData = await pool(TABS, 4, async ([tab, gid, label]) => {
-  const csv = await (await get(`${base}/export?format=csv&gid=${gid}`, `${tab} CSV`)).text();
+  const csv = process.env.LUX_SHEET_SNAPSHOT === '1'
+    ? readFileSync(join(sheetSnapshot, `${gid}.csv`), 'utf8')
+    : await (await get(`${base}/export?format=csv&gid=${gid}`, `${tab} CSV`)).text();
   const watches = parseProducts(csv, tab, label);
   if (!watches.length) throw new Error(`${tab} had no valid watch rows`);
   let links = new Map();
@@ -156,23 +163,14 @@ if (withoutPhotos.length) {
 }
 
 const brands = brandData.map(({ gid, label, watches: rows }) => ({ name: label, slug: slug(label), gid: String(gid), count: rows.length }));
+await optimizeWatchImages(watches, dist, root);
 const catalog = {
   source: base, fetchedAt: new Date().toISOString(), sourceFingerprint: sourceFingerprint.digest('hex'),
   watches: watches.map(({ imageSource, ...watch }) => watch), brands
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
-for (const file of ['app.js', 'styles.css', 'chat.css', 'admin.css', 'logo.jpg', 'hero-watch.png', 'collection-banner.png', 'marble-background.png', 'favicon.svg']) copyFileSync(join(root, 'src', file), join(dist, file));
-mkdirSync(join(dist, 'chat'), { recursive: true });
-for (const file of ['firebase.js', 'customer.js', 'admin.js']) copyFileSync(join(root, 'src', 'chat', file), join(dist, 'chat', file));
-mkdirSync(join(dist, 'admin'), { recursive: true });
-copyFileSync(join(root, 'src', 'admin', 'index.html'), join(dist, 'admin', 'index.html'));
-const assetVersion = createHash('sha256')
-  .update(readFileSync(join(root, 'src', 'app.js')))
-  .update(readFileSync(join(root, 'src', 'styles.css')))
-  .digest('hex').slice(0, 12);
-const template = readFileSync(join(root, 'src', 'index.html'), 'utf8')
-  .replace('href="/styles.css"', `href="/styles.css?v=${assetVersion}"`)
-  .replace('src="/app.js"', `src="/app.js?v=${assetVersion}"`);
+const { rewrite } = await prepareAssets(root, dist);
+const template = rewrite(readFileSync(join(root, 'src', 'index.html'), 'utf8'));
 const page = (path, title, description, image) => template
   .replaceAll('__TITLE__', title.replace(/[&<>"']/g, ''))
   .replaceAll('__DESCRIPTION__', description.replace(/[&<>"']/g, ''))
@@ -191,15 +189,6 @@ writeFileSync(join(dist, '404.html'), page('/', 'Page not found | Lux Co South',
 writeFileSync(join(dist, 'robots.txt'), 'User-agent: *\nAllow: /\n');
 const paths = ['/', '/watches/', '/brands/', '/favorites/', '/contact/', ...brands.map(b => `/watches/${b.slug}/`), ...watches.map(w => `/watch/${w.id}/`)];
 writeFileSync(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map(path => `<url><loc>${origin + path}</loc></url>`).join('')}</urlset>`);
-const siteFingerprint = createHash('sha256')
-  .update(JSON.stringify({ ...catalog, fetchedAt: null }))
-  .update(readFileSync(join(root, 'src', 'index.html')));
-for (const file of ['app.js', 'styles.css', 'logo.jpg', 'hero-watch.png', 'collection-banner.png', 'marble-background.png', 'favicon.svg']) {
-  siteFingerprint.update(readFileSync(join(root, 'src', file)));
-}
-for (const image of readdirSync(join(dist, 'images')).sort()) {
-  siteFingerprint.update(image);
-  siteFingerprint.update(readFileSync(join(dist, 'images', image)));
-}
-writeFileSync(join(dist, 'api', 'site-fingerprint.json'), JSON.stringify({ fingerprint: siteFingerprint.digest('hex') }));
+writeSiteFingerprint(dist);
+publishStage(root);
 console.log(`Built ${watches.length} watches, ${brands.length} brands, ${saved} images; ${missed} image downloads unavailable.`);

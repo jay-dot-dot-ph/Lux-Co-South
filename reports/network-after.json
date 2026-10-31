@@ -1,0 +1,68 @@
+[
+  {
+    "route": "/",
+    "mobile": false,
+    "warm": false,
+    "bytes": 1000412,
+    "requests": 17,
+    "imageBytes": 503141,
+    "imageRequests": 11,
+    "jsCssBytes": 168615,
+    "cacheHits": 0
+  },
+  {
+    "route": "/watches/",
+    "mobile": false,
+    "warm": false,
+    "bytes": 1244728,
+    "requests": 33,
+    "imageBytes": 747651,
+    "imageRequests": 27,
+    "jsCssBytes": 168615,
+    "cacheHits": 0
+  },
+  {
+    "route": "/watch/AP-W001/",
+    "mobile": false,
+    "warm": false,
+    "bytes": 816422,
+    "requests": 13,
+    "imageBytes": 319078,
+    "imageRequests": 7,
+    "jsCssBytes": 168615,
+    "cacheHits": 0
+  },
+  {
+    "route": "/watches/",
+    "mobile": false,
+    "warm": true,
+    "bytes": 0,
+    "requests": 33,
+    "imageBytes": 0,
+    "imageRequests": 27,
+    "jsCssBytes": 0,
+    "cacheHits": 30
+  },
+  {
+    "route": "/",
+    "mobile": true,
+    "warm": false,
+    "bytes": 792422,
+    "requests": 9,
+    "imageBytes": 295151,
+    "imageRequests": 3,
+    "jsCssBytes": 168615,
+    "cacheHits": 0
+  },
+  {
+    "route": "/watches/",
+    "mobile": true,
+    "warm": false,
+    "bytes": 1244728,
+    "requests": 33,
+    "imageBytes": 747651,
+    "imageRequests": 27,
+    "jsCssBytes": 168615,
+    "cacheHits": 0
+  }
+]

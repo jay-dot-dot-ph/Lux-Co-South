@@ -44,7 +44,7 @@ function setTheme(value) {
   });
 }
 function productCard(p) {
-  return `<span class="lux-product">${p.image ? `<span class="lux-product-photo"><img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}"></span>` : '<span class="lux-product-photo">✦</span>'}<span class="lux-product-copy"><strong>${escapeHtml(p.brand)} ${escapeHtml(p.name)}</strong><small>Watch ID ${escapeHtml(p.id)}</small><small>${p.price == null ? 'Price on request' : `₱${Number(p.price).toLocaleString('en-PH')}`} · ${p.stock === 0 ? 'Sold out' : p.stock == null ? 'Availability on request' : `${p.stock} available`}</small><small>${escapeHtml([p.size, p.movement].filter(Boolean).join(' · '))}</small></span></span>`;
+  return `<span class="lux-product">${p.image ? `<span class="lux-product-photo"><img src="${escapeHtml(p.thumbnailImage || p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async"></span>` : '<span class="lux-product-photo">✦</span>'}<span class="lux-product-copy"><strong>${escapeHtml(p.brand)} ${escapeHtml(p.name)}</strong><small>Watch ID ${escapeHtml(p.id)}</small><small>${p.price == null ? 'Price on request' : `₱${Number(p.price).toLocaleString('en-PH')}`} · ${p.stock === 0 ? 'Sold out' : p.stock == null ? 'Availability on request' : `${p.stock} available`}</small><small>${escapeHtml([p.size, p.movement].filter(Boolean).join(' · '))}</small></span></span>`;
 }
 function modal() {
   if (!preview) return '';
@@ -61,7 +61,12 @@ function login(message = '') {
   root.innerHTML = `<div class="lux-admin-login"><a href="/">WATCH COLLECTION SOUTH</a><div class="lux-login-theme">${themeButton()}</div><h1>Staff messages</h1><form id="login-form"><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">Sign in</button></form><p class="lux-chat-error" role="alert">${escapeHtml(message)}</p></div>`;
 }
 function staffPage() {
+  const previous = root.querySelector('#staff-form');
+  const draft = previous ? Object.fromEntries(['uid', 'name', 'email', 'role'].map(name => [name, previous.elements[name].value])) : null;
+  const focused = previous?.contains(document.activeElement) ? document.activeElement.name : null;
   root.innerHTML = header() + `<div class="lux-staff-page"><div class="lux-staff-intro"><p class="eyebrow">OWNER ACCESS</p><h1>Staff management</h1><p>Manage who can reply to customers.</p></div><div class="lux-staff-grid"><section class="lux-staff-list"><h2>Team members</h2>${staffRows.map(person => `<div class="lux-staff-row"><div><strong>${escapeHtml(person.displayName || person.email || person.id)}</strong><small>${escapeHtml(person.email || '')}</small><small>UID ${escapeHtml(person.id)}</small></div><span>${escapeHtml(person.role)} · ${person.active ? 'Active' : 'Disabled'}</span>${person.role === 'owner' ? '' : `<select data-staff-role="${escapeHtml(person.id)}" aria-label="Role for ${escapeHtml(person.displayName || person.email || person.id)}"><option value="staff" ${person.role === 'staff' ? 'selected' : ''}>Staff</option><option value="admin" ${person.role === 'admin' ? 'selected' : ''}>Admin</option></select><button type="button" data-staff-active="${escapeHtml(person.id)}">${person.active ? 'Disable' : 'Enable'}</button>`}</div>`).join('') || '<p>No staff profiles yet.</p>'}</section><section class="lux-staff-add"><h2>Grant access</h2><p>Create an email/password account in Firebase Authentication first, then paste its UID here.</p><form id="staff-form"><label>Firebase Auth UID<input name="uid" maxlength="128" required></label><label>Name<input name="name" maxlength="80" required></label><label>Email<input name="email" type="email" maxlength="254" required></label><label>Role<select name="role"><option value="staff">Staff</option><option value="admin">Admin</option></select></label><button type="submit" ${busy ? 'disabled' : ''}>Grant access</button></form></section></div></div><p class="lux-chat-error" role="alert"></p>`;
+  if (draft) for (const [name, value] of Object.entries(draft)) root.querySelector('#staff-form').elements[name].value = value;
+  if (focused) root.querySelector('#staff-form').elements[focused]?.focus();
 }
 function render() {
   if (!session || !profile) return login();
@@ -222,13 +227,16 @@ root.addEventListener('submit', async event => {
   if (event.target.id === 'staff-form') {
     if (!isOwner() || busy) return;
     const form = event.target, uid = form.elements.uid.value.trim();
+    const displayName = form.elements.name.value.trim();
+    const email = form.elements.email.value.trim().toLowerCase();
+    const role = form.elements.role.value;
     if (!/^[A-Za-z0-9_-]{8,128}$/.test(uid)) return showError(new Error('Enter a valid Firebase Auth UID.'));
     busy = true; render();
     try {
       const ref = doc(session.db, 'luxStaff', uid);
       if ((await getDoc(ref)).exists()) throw new Error('This UID already has a staff profile.');
-      await setDoc(ref, { displayName: form.elements.name.value.trim(), email: form.elements.email.value.trim().toLowerCase(), role: form.elements.role.value, active: true, createdAt: serverTimestamp(), createdBy: session.auth.currentUser.uid });
-      form.reset();
+      await setDoc(ref, { displayName, email, role, active: true, createdAt: serverTimestamp(), createdBy: session.auth.currentUser.uid });
+      root.querySelector('#staff-form')?.reset();
     } catch (error) { showError(error); }
     finally { busy = false; render(); }
     return;

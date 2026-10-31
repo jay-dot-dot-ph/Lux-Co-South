@@ -60,8 +60,14 @@ try {
   await ownerPage.locator('.lux-inbox-row').first().click();
   await ownerPage.locator('.lux-product-button').waitFor();
   const image = ownerPage.locator('.lux-product-photo img').first();
-  await image.waitFor();
-  assert((await image.boundingBox()).width >= 85, 'Product thumbnail is larger');
+  await image.waitFor({ state: 'visible' });
+  let imageBox;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    imageBox = await image.boundingBox().catch(() => null);
+    if (imageBox?.width >= 85) break;
+    await ownerPage.waitForTimeout(150);
+  }
+  assert(imageBox?.width >= 85, 'Product thumbnail is larger');
   await image.hover();
   await ownerPage.waitForTimeout(300);
   assert.notEqual(await image.evaluate(el => getComputedStyle(el).transform), 'none', 'Hover zoom scales the image');
@@ -92,7 +98,7 @@ try {
   assert.equal(await ownerPage.locator('.lux-chat-bubble.out').filter({ hasText: 'First line' }).count(), 1, 'Reply is sent once');
   await guest.locator('.lux-chat-bubble.in').filter({ hasText: 'First line' }).waitFor();
   assert.equal(await ownerPage.locator('#admin-message').inputValue(), '');
-  assert.equal(await ownerPage.locator('#admin-message').evaluate(el => document.activeElement === el), true, 'Focus returns to reply input');
+  await ownerPage.waitForFunction(() => document.activeElement?.id === 'admin-message');
   await ownerPage.evaluate(() => {
     window.__chimeCount = 0;
     const Original = window.AudioContext;
@@ -109,7 +115,10 @@ try {
   await ownerPage.locator('input[name=name]').fill('Support Staff');
   await ownerPage.locator('input[name=email]').fill(staff.email);
   await ownerPage.locator('#staff-form button').click();
-  await ownerPage.locator('.lux-staff-row').filter({ hasText: staff.uid }).waitFor();
+  await ownerPage.locator('.lux-staff-row').filter({ hasText: staff.uid }).waitFor().catch(async error => {
+    console.error('Staff form diagnostic:', await ownerPage.locator('.lux-chat-error').allTextContents(), await ownerPage.locator('#staff-form input').evaluateAll(inputs => inputs.map(input => [input.name, input.value])));
+    throw error;
+  });
   ownerPage.once('dialog', dialog => dialog.accept());
   await ownerPage.locator(`[data-staff-active="${staff.uid}"]`).click();
   await ownerPage.locator('.lux-staff-row').filter({ hasText: staff.uid }).filter({ hasText: 'Disabled' }).waitFor();
@@ -141,9 +150,16 @@ try {
   await adminPage.locator('[data-block]').filter({ hasText: 'Unblock' }).waitFor();
   await adminPage.locator('[data-block]').click();
   await adminPage.locator('[data-block]').filter({ hasText: 'Block' }).waitFor();
+  await adminPage.waitForFunction(() => {
+    const button = document.querySelector('[data-block]');
+    return button && !button.disabled && button.textContent.trim() === 'Block';
+  });
   ownerPage.once('dialog', dialog => dialog.accept());
   await ownerPage.locator('[data-delete-chat]').click();
-  await ownerPage.locator('.lux-inbox-row').waitFor({ state: 'detached' });
+  await ownerPage.locator('.lux-inbox-row').waitFor({ state: 'detached' }).catch(async error => {
+    console.error('Delete diagnostic:', await ownerPage.locator('.lux-chat-error').allTextContents());
+    throw error;
+  });
   assert.deepEqual(errors, []);
   console.log('Admin parity browser: theme colors and persistence, roles, staff grant and disable, assignment, status, image modal and zoom, Enter/Shift+Enter/IME, blank and duplicate reply guards, focus, real-time reply and sound, block/unblock, delete, mobile layout passed.');
 } finally {

@@ -13,6 +13,10 @@ createServer((request, response) => {
   if (file !== root && !file.startsWith(root + sep)) { response.writeHead(403).end(); return; }
   if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
   if (!existsSync(file)) { response.writeHead(404).end(); return; }
-  response.writeHead(200, { 'content-type': types[extname(file)] || 'application/octet-stream' });
+  const cache = pathname.startsWith('/images/') ? 'public, max-age=31536000, immutable'
+    : /\.[a-f0-9]{12}\.(?:js|css)$/.test(pathname) ? 'public, max-age=31536000, immutable'
+    : pathname === '/api/catalog.json' || pathname.endsWith('.html') || pathname.endsWith('/') ? 'public, max-age=60'
+    : /\.(?:js|css)$/.test(pathname) ? 'public, max-age=300' : 'public, max-age=3600';
+  response.writeHead(200, { 'content-type': types[extname(file)] || 'application/octet-stream', 'cache-control': cache });
   response.end(readFileSync(file));
 }).listen(port, '127.0.0.1', () => console.log(`Local: http://127.0.0.1:${port}`));
