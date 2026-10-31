@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SHEET_ID, TABS, parseCsv, parseProducts, parseImagePage, slug } from './sheet.mjs';
@@ -45,8 +45,14 @@ const brandData = await pool(TABS, 4, async ([tab, gid, label]) => {
   const csv = process.env.LUX_SHEET_SNAPSHOT === '1'
     ? readFileSync(join(sheetSnapshot, `${gid}.csv`), 'utf8')
     : await (await get(`${base}/export?format=csv&gid=${gid}`, `${tab} CSV`)).text();
-  const watches = parseProducts(csv, tab, label);
-  if (!watches.length) throw new Error(`${tab} had no valid watch rows`);
+  let watches = parseProducts(csv, tab, label);
+  if (!watches.length) {
+    const live = await (await get(`${origin}/api/catalog.json`, 'live catalog')).json();
+    watches = live.watches.filter(watch => watch.tab === tab).map(watch => ({ ...watch, image: null, thumbnailImage: null, imageSource: null, retainedFromLive: true }));
+    if (!watches.length) throw new Error(`${tab} is empty and has no live watches to retain`);
+    console.warn(`${tab}: Sheet tab empty; retaining ${watches.length} live watches`);
+    return { tab, gid, label, watches, rows: parseCsv(csv), csv };
+  }
   let links = new Map();
   try {
     const html = await (await get(`${base}/edit?gid=${gid}`, `${tab} image page`)).text();
@@ -60,7 +66,7 @@ const brandData = await pool(TABS, 4, async ([tab, gid, label]) => {
 const watches = brandData.flatMap(brand => brand.watches);
 const sourceFingerprint = createHash('sha256');
 for (const { gid, csv } of brandData) sourceFingerprint.update(`${gid}\n${csv}\n`);
-const missingLinks = watches.filter(watch => !watch.imageSource);
+const missingLinks = watches.filter(watch => !watch.imageSource && !watch.retainedFromLive);
 mkdirSync(embeddedCache, { recursive: true });
 const embeddedFiles = readdirSync(embeddedCache);
 const embeddedKey = id => createHash('sha256').update(id).digest('hex').slice(0, 20);
@@ -166,7 +172,7 @@ const brands = brandData.map(({ gid, label, watches: rows }) => ({ name: label, 
 await optimizeWatchImages(watches, dist, root);
 const catalog = {
   source: base, fetchedAt: new Date().toISOString(), sourceFingerprint: sourceFingerprint.digest('hex'),
-  watches: watches.map(({ imageSource, ...watch }) => watch), brands
+  watches: watches.map(({ imageSource, retainedFromLive, ...watch }) => watch), brands
 };
 writeFileSync(join(dist, 'api', 'catalog.json'), JSON.stringify(catalog));
 const { rewrite } = await prepareAssets(root, dist);
