@@ -630,7 +630,7 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 :root[data-theme="light"] .hero { background: var(--background); }
 :root[data-theme="light"] .hero-art { background: #eee8dd; }
 :root[data-theme="light"] .hero-mark { box-shadow: 0 26px 80px #3f2e1f2e; }
-:root[data-theme="light"] .hero-bottom { background: #f0e9de; }
+:root[data-theme="light"] .hero-bottom { background: #fff; }
 :root[data-theme="light"] .brand-feature { background: transparent; }
 :root[data-theme="light"] .brand-feature:hover { background: #f0e8da; }
 :root[data-theme="light"] .home-featured { background: #eee8df; }
@@ -1084,14 +1084,14 @@ fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .contact-visit { background: linear-gradient(90deg, #150f0bdb, #1e140ddd), url('/marble-background.png') center / cover no-repeat, #120d09; }
 .detail-main { background: radial-gradient(ellipse at 90% 0, #6b431b21, transparent 35%), #0c0b09; }
 .site-footer { background: linear-gradient(90deg, #090807e8, #0c0a08df), url('/marble-background.png') center / cover no-repeat, #090807; }
-:root[data-theme="light"] .home-brands { background: radial-gradient(ellipse at 10% 20%, #d9c4a187, transparent 50%), linear-gradient(#faf6ee, #efe7da); }
-:root[data-theme="light"] .home-brands::after { background: linear-gradient(transparent, #f0e8dc); }
+:root[data-theme="light"] .home-brands { background: #fff; }
+:root[data-theme="light"] .home-brands::after { background: linear-gradient(transparent, #fff); }
 :root[data-theme="light"] .brand-feature { border-color: #a37e4e67; background: linear-gradient(145deg, #fffdfa, #f2e9db); box-shadow: 0 14px 34px #5b3f1a17; }
 :root[data-theme="light"] .brand-feature:hover { background: #eee0ca; }
-:root[data-theme="light"] .home-featured { background: radial-gradient(ellipse at 80% 0, #d9c2a294, transparent 55%), linear-gradient(#efe7dd, #f9f4ec); }
+:root[data-theme="light"] .home-featured { background: #fff; }
 :root[data-theme="light"] .collection-tile { background: radial-gradient(circle at 85% 15%, #d5b887c2, transparent 45%), linear-gradient(145deg, #f8f0e2, #eee2d0); }
 :root[data-theme="light"] .home-featured .collection-tile { background: radial-gradient(ellipse at 80% 20%, #d7ba8bba, transparent 55%), linear-gradient(110deg, #f8f0e3, #e8d8bf); }
-:root[data-theme="light"] .catalog-section { background: radial-gradient(ellipse at 85% 0, #d4b78a36, transparent 45%), #f8f5ef; }
+:root[data-theme="light"] .catalog-section { background: #fff; }
 :root[data-theme="light"] .filter-panel { background: linear-gradient(160deg, #fffdfa, #f6eee3); }
 :root[data-theme="light"] .watch-card { background: linear-gradient(#fffdfa, #f9f4ed); }
 :root[data-theme="light"] .visit-section { background: radial-gradient(ellipse at 70% 10%, #ddc7a7, transparent 50%), linear-gradient(#f7f1e8, #eee3d2); }
